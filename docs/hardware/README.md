@@ -1,5 +1,7 @@
 # Reference hardware
 
+For an ordered assembly walkthrough, start with the [glove build guide](../BUILD_GUIDE.md).
+
 ## What is known
 
 The original code uses five analog inputs, an RF24 radio with CE=D7/CSN=D8,

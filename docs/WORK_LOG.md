@@ -28,3 +28,12 @@
 - Publication uses GitHub's branch rename operation followed by a normal fast-forward push, preserving history without a force push. The active chat follows the hosted CI to completion and handles any failures.
 
 - The first hosted run passed host tests/sanitizers but failed in setup-python before compilation: its pip cache searched default dependency filenames and did not find `requirements-dev.txt`. Set `cache-dependency-path` explicitly to the existing lock file; no firmware workaround or cache removal is needed.
+
+## Glove guide and applications expansion (2026-11-16)
+
+- Confirmed that the project is a glove and added an original code-native SVG to the README: back-of-hand sensor placement, active A0 channel, optional strips, serial/RF flow and synthetic 700 → 675 → 160° data from `make example`. No physical measurements or finger-angle accuracy are claimed.
+- Added a staged build guide covering preparation, divider checks, single-channel readings, calibration, CSV capture, wearable mounting, RF, external servo power, loss behavior, five-channel expansion and troubleshooting. Verified monitor flags against the installed CLI help.
+- Reviewed folder responsibilities and retained the existing firmware/include/tests/examples split. Added `docs/images` for conceptual illustrations and a contribution guide that documents the full tree and shared reader source, avoiding copied sketches or disruptive directory churn.
+- Documented educational sensing, remote actuation, gesture datasets, game/music controls and wearable interaction applications, explicitly distinguishing existing demonstrations from extensions requiring implementation and validation.
+- Host tests/example and local Markdown link/SVG XML checks pass. Rendered the glove illustration in an isolated headless Chrome profile and inspected placement, labels and data cards.
+- Hosted CI passed both jobs after the cache-path fix: https://github.com/kleberandrade/sensor-flex-groove/actions/runs/43799681424 (`fa16a26`). The documentation update is also followed through CI after publication.

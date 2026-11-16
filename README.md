@@ -17,6 +17,35 @@ explicit reference design for discrete resistive sensors, not a reconstruction
 of unrecorded hardware. Do not apply it to an unknown Grove module without its
 part-specific datasheet.
 
+## The glove at a glance
+
+![Glove with an active flex sensor and illustrative reading flow](docs/images/glove-overview.svg)
+
+The drawing shows a **reference placement on the back of the index finger**.
+Its 700 → 675 → 160° values come from the synthetic `make example` sequence,
+not a physical glove measurement. The last number is a servo command, not a
+measured finger angle. Dashed strips indicate optional extra channels; only one
+channel and one servo are enabled in the default demonstration.
+
+For a first build, follow the [step-by-step glove guide](docs/BUILD_GUIDE.md):
+start with one divider and USB readings, mount the strip, calibrate, then add the
+radio and unloaded servo. The guide explains CSV fields, capture, five-channel
+expansion and troubleshooting. Review the [electrical BOM and pinout](docs/hardware/README.md)
+before wiring.
+
+## Applications
+
+- Teach resistive sensing, ADC acquisition, calibration and the noise/latency trade-off.
+- Demonstrate one-finger wireless control of an unloaded servo.
+- Record labeled bend data for gesture-recognition experiments.
+- Build a host-side bridge for game, music or visual controls.
+- Explore comfortable wearable control mappings and accessibility prototypes.
+
+The first two demonstrations use the supplied firmware. Dataset classification,
+game/MIDI/HID interfaces, multi-servo hands and assistive products require
+additional implementation and validation. See [applications and extension paths](docs/APPLICATIONS.md)
+for what is available now and what each idea needs.
+
 ## Requirements
 
 - Host checks: C++11 compiler and Make; no Arduino hardware or Python needed.
@@ -136,6 +165,10 @@ performed as part of this modernization.
 - `include/flex/`: portable processing/protocol and shared hardware settings.
 - `tests/`, `examples/`: executable host behavior checks and reading example.
 - `docs/hardware/`: original SVG reference circuit, BOM and primary sources.
+- `docs/images/`: original illustrations; guides live directly under `docs/`.
+
+See the [folder conventions and contribution guide](docs/CONTRIBUTING.md) for
+the complete tree, shared-reader design and validation workflow.
 
 The old `RF_send/RF_send.ino` and `RF_receive/RF_receive.ino` entry points moved
 to the firmware directories. Use PlatformIO environments instead of opening the

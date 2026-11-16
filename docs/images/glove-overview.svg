@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="800" viewBox="0 0 1320 800" role="img" aria-labelledby="title desc">
+<title id="title">Flex sensor glove: sensor placement and reading flow</title>
+<desc id="desc">Conceptual back-of-hand view of a glove, with one flex strip over the index finger wired to A0 on an Arduino Uno. Three stages show raw ADC readings, an eight-sample average, and a bounded servo command. Numbers are synthetic results from the executable host example, not physical measurements.</desc>
+<defs>
+ <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8" fill="none" stroke="#527089" stroke-width="1.5"/></marker>
+</defs>
+<style>
+ text{font-family:Arial,Helvetica,sans-serif;fill:#17334a;font-size:18px}
+ .title{font-size:32px;font-weight:bold}.heading{font-size:22px;font-weight:bold}
+ .small{font-size:16px}.label{font-size:14px;letter-spacing:1px;font-weight:bold}
+ .number{font-size:42px;font-weight:bold}.wire{fill:none;stroke:#527089;stroke-width:2}
+ .card{fill:white;stroke:#ccdce7;stroke-width:1.5}
+</style>
+<rect width="1320" height="800" fill="#f7fafc"/>
+<text x="42" y="55" class="title">A glove that turns finger movement into a control signal</text>
+<text x="42" y="87">Reference assembly · one active flex sensor · Arduino Uno R3 · optional nRF24L01+ link</text>
+<rect x="30" y="116" width="490" height="613" rx="20" fill="white" stroke="#d9e4ed"/>
+<text x="52" y="153" class="heading">01 / Wear and sense</text>
+<text x="52" y="179" class="small">Back of hand · illustrative placement</text>
+<g transform="translate(30,110) scale(0.83)">
+ <path d="M170 650 L165 570 Q119 548 94 499 L45 409 Q24 368 58 352 Q82 342 103 368 L145 424 L128 236 Q125 195 156 190 Q187 185 192 222 L211 360 L202 135 Q200 101 231 99 Q264 95 268 132 L285 351 L286 175 Q286 143 319 145 Q348 149 346 181 L346 381 L365 257 Q370 223 401 228 Q429 233 423 269 L398 416 Q432 465 414 520 Q401 553 379 579 L373 650 Z" fill="#e5eefc" stroke="#597aa3" stroke-width="3"/>
+ <path d="M184 615 H357 M190 590 Q265 560 357 590 M164 438 Q271 410 387 438" fill="none" stroke="#9eb8d7" stroke-width="2" stroke-dasharray="6 6"/>
+ <rect x="147" y="221" width="22" height="170" rx="7" fill="#eeb748" stroke="#9b6814" stroke-width="2" transform="rotate(-6 158 221)"/>
+ <path d="M158 230 L173 380" stroke="#815a13" stroke-width="3" stroke-dasharray="5 5"/>
+ <path d="M173 390 Q190 438 225 472 L268 530 M180 390 Q199 428 235 463 L282 530" fill="none" stroke="#bf8132" stroke-width="3"/>
+ <rect x="224" y="131" width="16" height="216" rx="7" fill="none" stroke="#98abc2" stroke-width="2" stroke-dasharray="6 5" transform="rotate(-4 232 131)"/>
+ <rect x="304" y="178" width="16" height="185" rx="7" fill="none" stroke="#98abc2" stroke-width="2" stroke-dasharray="6 5"/>
+ <rect x="382" y="264" width="16" height="139" rx="7" fill="none" stroke="#98abc2" stroke-width="2" stroke-dasharray="6 5" transform="rotate(7 390 264)"/>
+ <rect x="220" y="531" width="135" height="55" rx="10" fill="#176e7e"/>
+ <text x="235" y="555" style="fill:white;font-size:16px;font-weight:bold">TO UNO A0</text>
+ <text x="235" y="575" style="fill:white;font-size:14px">via 10 kΩ divider</text>
+ <path class="wire" d="M143 282 H33 V227"/>
+ <text x="7" y="210" class="small">Active strip</text>
+ <text x="7" y="231" class="small">index → A0</text>
+ <path class="wire" d="M330 306 H430 V320"/>
+ <text x="440" y="320" class="small">Optional</text>
+ <text x="440" y="342" class="small">channels</text>
+</g>
+<text x="52" y="703" class="small">Light straps hold the strip; leads need strain relief.</text>
+<rect x="548" y="116" width="742" height="613" rx="20" fill="#edf4f8"/>
+<text x="575" y="155" class="heading">02 / Read, filter and calibrate</text>
+<text x="575" y="184" class="small">Synthetic data from make example · calibration endpoints: 300–700</text>
+<rect x="575" y="212" width="202" height="152" rx="14" class="card"/>
+<text x="594" y="245" class="label">RAW ADC</text><text x="594" y="302" class="number">700</text>
+<text x="594" y="337" class="small">10-bit range: 0–1023</text>
+<rect x="817" y="212" width="202" height="152" rx="14" class="card"/>
+<text x="836" y="245" class="label">FILTERED</text><text x="836" y="302" class="number">675</text>
+<text x="836" y="337" class="small">8-sample mean</text>
+<rect x="1059" y="212" width="202" height="152" rx="14" class="card"/>
+<text x="1078" y="245" class="label">COMMAND</text><text x="1078" y="302" class="number">160°</text>
+<text x="1078" y="337" class="small">Clamped to 10–170</text>
+<path class="wire" d="M785 288 H806" marker-end="url(#arrow)"/>
+<path class="wire" d="M1027 288 H1048" marker-end="url(#arrow)"/>
+<rect x="575" y="390" width="686" height="84" rx="12" fill="#fff4d9"/>
+<text x="595" y="421">The numbers demonstrate the algorithm, not a measured hand pose.</text>
+<text x="595" y="449" class="small">Servo command ≠ physical finger angle. No bench measurements are shown.</text>
+<text x="575" y="522" class="heading">03 / Inspect data or control one servo</text>
+<rect x="575" y="548" width="316" height="143" rx="14" class="card"/>
+<text x="595" y="582" class="heading">Standalone reader</text>
+<text x="595" y="615">Uno → USB serial → CSV</text>
+<text x="595" y="645" class="small">No radio or servo required.</text>
+<text x="595" y="671" class="small">Start here to check the sensor.</text>
+<rect x="913" y="548" width="348" height="143" rx="14" class="card"/>
+<text x="933" y="582" class="heading">Wireless demonstration</text>
+<text x="933" y="615">Uno + radio → receiver → D2</text>
+<text x="933" y="645" class="small">One servo; separate external supply.</text>
+<text x="933" y="671" class="small">500 ms without valid data → detach.</text>
+<text x="42" y="770" class="small">Original conceptual diagram · MIT · See the build guide for actual wiring, supply limits and assembly steps.</text>
+</svg>
