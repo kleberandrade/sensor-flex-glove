@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1160" height="840" viewBox="0 0 1160 840" role="img" aria-labelledby="title desc">
+<title id="title">Flex glove: original one-sensor reference circuit</title>
+<desc id="desc">Two Arduino Uno R3 nodes with nRF24L01+ radios. A passive flex divider feeds transmitter A0. Receiver D2 controls one independently powered servo. Connections use named radio pins.</desc>
+<style>text{font-family:Arial,sans-serif;fill:#152b41;font-size:16px}.title{font-size:26px;font-weight:bold}.heading{font-size:20px;font-weight:bold}.small{font-size:14px}.wire{fill:none;stroke:#176d82;stroke-width:2}.box{fill:#f0f6fa;stroke:#466078;stroke-width:2}.part{fill:white;stroke:#176d82;stroke-width:2}.note{fill:#fff4d9;stroke:#bc943b}</style>
+<rect width="1160" height="840" fill="white"/>
+<text x="35" y="42" class="title">Flex glove · Arduino Uno R3 reference circuit</text>
+<text x="35" y="70">Discrete 10 kΩ flex sensor · no unidentified Grove module assumed · not bench tested</text>
+<rect class="box" x="30" y="100" width="535" height="630" rx="12"/>
+<rect class="box" x="590" y="100" width="540" height="630" rx="12"/>
+<text x="50" y="132" class="heading">TRANSMITTER</text>
+<text x="610" y="132" class="heading">RECEIVER</text>
+<text x="50" y="165">USB → Uno power</text>
+<text x="610" y="165">USB → Uno power</text>
+<text x="55" y="205">Uno 5V</text>
+<path class="wire" d="M130 200 H200 V220"/>
+<rect class="part" x="181" y="220" width="38" height="70"/>
+<text x="240" y="251">Flex resistor</text><text x="240" y="275" class="small">10 kΩ nominal, rises on bend</text>
+<path class="wire" d="M200 290 V335 H100"/>
+<circle cx="200" cy="335" r="4" fill="#176d82"/>
+<text x="53" y="340">A0</text>
+<path class="wire" d="M200 335 V365"/>
+<rect class="part" x="181" y="365" width="38" height="65"/>
+<text x="240" y="400">10 kΩ fixed, 1%</text>
+<path class="wire" d="M200 430 V455 M179 455 H221 M185 461 H215 M192 467 H208"/>
+<text x="240" y="460">Uno GND</text>
+<text x="55" y="505" class="small">Repeat divider for A1–A4 only when enabled.</text>
+<rect class="part" x="850" y="210" width="235" height="135" rx="6"/>
+<text x="870" y="241" class="heading">Servo</text>
+<text x="870" y="275">SIG</text><text x="870" y="302">V+</text><text x="870" y="329">GND</text>
+<text x="620" y="275">Uno D2</text>
+<path class="wire" d="M695 270 H850"/>
+<text x="620" y="302">4.8 V supply +</text><path class="wire" d="M760 297 H850"/>
+<text x="620" y="329">Supply − / Uno GND</text><path class="wire" d="M795 324 H850"/>
+<rect class="note" x="613" y="370" width="490" height="95" rx="6"/>
+<text x="630" y="397">Servo supply is separate from Uno power.</text>
+<text x="630" y="422">Route motor return directly to supply negative.</text>
+<text x="630" y="447">Do not join external V+ to Uno 5V / VIN.</text>
+<text x="615" y="505" class="small">Only finger 0 drives a servo in this firmware.</text>
+<rect class="part" x="55" y="530" width="485" height="175" rx="6"/>
+<text x="70" y="557" class="heading">Uno ↔ nRF24L01+ (each node)</text>
+<text x="70" y="585">3.3V → VCC     GND → GND     IRQ: open</text>
+<text x="70" y="614">D7 → CE        D8 → CSN       D13 → SCK</text>
+<text x="70" y="643">D11 → MOSI     D12 ← MISO</text>
+<text x="70" y="672">100 nF ∥ 10 µF across radio VCC / GND</text>
+<rect class="part" x="615" y="530" width="485" height="175" rx="6"/>
+<text x="630" y="557" class="heading">Uno ↔ nRF24L01+ (each node)</text>
+<text x="630" y="585">3.3V → VCC     GND → GND     IRQ: open</text>
+<text x="630" y="614">D7 → CE        D8 → CSN       D13 → SCK</text>
+<text x="630" y="643">D11 → MOSI     D12 ← MISO</text>
+<text x="630" y="672">100 nF ∥ 10 µF across radio VCC / GND</text>
+<text x="35" y="765">Radio VCC: never 5 V. Direct 5 V inputs require radio VDD within Nordic's 2.7–3.3 V condition.</text>
+<text x="35" y="791">Standard PCB-antenna radios only. Verify actual pin labels, voltage and servo travel before assembly.</text>
+<text x="35" y="817" class="small">Original project diagram · MIT · See hardware/README.md for BOM, supply limits and primary sources.</text>
+</svg>
