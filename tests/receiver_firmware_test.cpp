@@ -97,5 +97,22 @@ int main() {
   command("set 5 1100 1900\n");
   assert(Serial.output.find("ERR invalid command")!=std::string::npos);
   command("stop\n");
-  std::puts("Receiver firmware adapter + serial/EEPROM checks passed (host doubles)");
+  command("test 4 1500\n");assert(servos[4].attached());
+  command("invert 4 1\n");assert(!servos[4].attached());
+  command("set 4 1100 1900\n"); // endpoint edits must preserve orientation
+  command("test 4 1100\n");assert(servos[4].pulse==1100); // raw preview stays literal
+  command("save\n");command("show\n");
+  assert(Serial.output.find("channel,pin,min_us,max_us,reversed")!=std::string::npos);
+  assert(Serial.output.find("4,6,1100,1900,1")!=std::string::npos);
+  command("run\n");enqueue({10,31,{10,10,10,10,10}});loop();
+  for(uint8_t i=0;i<4;++i) assert(servos[i].pulse==1000);
+  assert(servos[4].pulse==1900);
+  command("invert 4 0\n"); // rejected outside calibration
+  enqueue({11,16,{10,10,10,10,170}});loop();assert(servos[4].pulse==1100);
+  command("cal\n");command("invert 4 0\n");command("load\n");
+  command("defaults\n");command("load\n");
+  setup();enqueue({12,16,{10,10,10,10,10}});loop();assert(servos[4].pulse==1900);
+  command("cal\n");command("invert 4 0\n");command("save\n");
+  setup();enqueue({13,16,{10,10,10,10,10}});loop();assert(servos[4].pulse==1100);
+  std::puts("Receiver firmware + serial limits/inversion/EEPROM checks passed (host doubles)");
 }

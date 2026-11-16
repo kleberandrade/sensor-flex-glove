@@ -218,12 +218,16 @@ and load. Do not use solderless breadboard power strips for motor distribution.
 
 ### Pulse calibration and staged verification
 
-`hardware::kServos` in `include/flex/hardware.hpp` holds five `{pin,minUs,maxUs}`
+`hardware::kServos` in `include/flex/hardware.hpp` holds five `{pin,minUs,maxUs,reversed}`
 defaults. A valid saved EEPROM profile overrides the pulse endpoints while pins
 remain firmware-owned. Defaults are D2–D6 with 1000–2000 µs endpoints. Use the
 [receiver serial calibration guide](../SERVO_CALIBRATION.md) to tune each channel
-with `cal`, `set`, a one-servo `test`, and explicit `save` without rebuilding. Commands 10 and 170
-map to those endpoints, and 90 maps to the midpoint. Endpoints are clamped and
+with `cal`, `set`, optional `invert CH 0|1`, a one-servo `test`, and explicit
+`save` without rebuilding. The optional fourth firmware field defaults to false.
+In normal direction, commands 10 and 170
+map to those endpoints; reversal swaps them for that channel. Command 90 stays
+at the integer midpoint. Raw serial pulse tests are not reversed. Endpoints are
+clamped and
 validated against the library's 544–2400 µs absolute software range, but that
 range is not a physical safety rating. Narrow and tune each channel unloaded
 before connecting its horn/linkage; recalibrate after changing a mechanism.

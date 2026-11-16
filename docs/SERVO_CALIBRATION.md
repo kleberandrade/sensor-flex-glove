@@ -1,6 +1,7 @@
 # Serial servo calibration and EEPROM persistence
 
-This calibrates the **receiver's pulse endpoints**, independently for each servo.
+This calibrates the **receiver's pulse endpoints and direction**, independently
+for each servo.
 It is separate from the transmitter's five-second ADC calibration (`c`), which
 still lives only in RAM. No wiring or RF packet-format change is required.
 
@@ -32,10 +33,10 @@ show
 actuation. The radio FIFO is drained but its commands are ignored while this mode
 is active. RF ACKs can still occur and do not indicate servo movement.
 
-`show` reports comment-prefixed `channel,pin,min_us,max_us` rows. Channel/pin
+`show` reports comment-prefixed `channel,pin,min_us,max_us,reversed` rows. Channel/pin
 mapping stays fixed by the firmware: 0→D2, 1→D3, 2→D4, 3→D5 and 4→D6. The suggested
-fingers are index, middle, ring, little and thumb. Serial/EEPROM limits cannot
-change pins or alter other channels when one channel is edited.
+fingers are index, middle, ring, little and thumb. The last field is `0` for
+normal direction and `1` for reversed. Serial/EEPROM settings cannot change pins or alter other channels when one channel is edited.
 
 ## Commands
 
@@ -44,9 +45,10 @@ Commands are lowercase, with decimal integer arguments separated by spaces/tabs.
 | Command | Effect |
 | --- | --- |
 | `help` | Print command syntax; allowed in either mode |
-| `show` | Print current RAM endpoints for all five channels |
+| `show` | Print current RAM endpoints and direction for all five channels |
 | `cal` | Enter calibration, detach all outputs, clear radio command state |
 | `set CH MIN_US MAX_US` | Change one channel's endpoints in RAM; stop manual output |
+| `invert CH 0\|1` | Set one channel to normal (`0`) or reversed (`1`) in RAM; stop manual output |
 | `test CH US` | Drive only that servo at an exact pulse for at most a 1000 ms software interval |
 | `stop` | Detach all outputs and stay in calibration; also enters calibration from RF mode |
 | `save` | Stop manual output and save the entire five-channel profile explicitly |
@@ -54,7 +56,7 @@ Commands are lowercase, with decimal integer arguments separated by spaces/tabs.
 | `defaults` | Stop manual output and restore firmware defaults in RAM; EEPROM is unchanged |
 | `run` | Stop manual output, leave calibration and wait for fresh RF commands; does not save |
 
-`set`, `test`, `save`, `load` and `defaults` require calibration mode. A rejected
+`set`, `invert`, `test`, `save`, `load` and `defaults` require calibration mode. A rejected
 command does not change endpoints or refresh a manual-test deadline. Changing
 the preview channel detaches the previous one before activating the new one.
 After a preview ends, radio control remains paused until `run`.
@@ -62,7 +64,8 @@ After a preview ends, radio control remains paused until `run`.
 ### Input limits and feedback
 
 - Channel is 0–4. Every channel requires `544 ≤ MIN_US < MAX_US ≤ 2400`.
-- `test` pulses must also lie within that channel's current RAM endpoints.
+- `test` pulses must also lie within that channel's current RAM endpoints. They
+  are literal microseconds and are **not** transformed by direction inversion.
 - Values are microseconds, not servo degrees. These software bounds do not
   establish safe mechanical travel for a particular servo.
 - Commands longer than 63 bytes, extra/missing arguments, signed/fractional/
@@ -120,9 +123,44 @@ saved profile. `run` clears cached RF state/FIFO so an old queued command cannot
 resume motion; newly arriving valid packets are required. Normal per-channel
 500 ms RF loss handling remains in effect outside calibration.
 
-In RF mode, commands 10–170 map to each channel's min/max pulse endpoints; 90
-maps to the midpoint. Verify the transmitter mapping and all five validity bits
+In normal RF direction, command 10 maps to min and 170 to max. For a reversed
+channel, command 10 maps to max and 170 to min; command 90 stays at the same
+integer midpoint. The logical command is clamped before reversing. Incoming
+packet angles and receiver angle CSV are unchanged; inversion affects only the
+final servo pulse. `test CH US` always applies raw microseconds within the limits.
+Verify the transmitter mapping and all five validity bits
 again after changing a servo's limits.
+
+## Reverse an individual servo
+
+Keep the mechanism unloaded and enter calibration before changing orientation:
+
+```text
+cal
+invert 2 1
+show
+save
+run
+```
+
+This reverses channel 2 / D4 (suggested ring finger). Use `invert 2 0` to restore
+normal direction, followed by `save` to persist it. The explicit 0/1 setting is
+idempotent; repeating `invert 2 1` does not toggle the direction. Values such as
+`2`, `-1`, `true`, or a channel outside 0–4 are rejected.
+
+Only that channel changes. Its min/max endpoints and pin are preserved; changing
+limits with `set` also preserves its current direction. Successful direction
+changes stop any manual test and detach outputs, and RF remains paused until
+`run`. A direction change is a RAM edit until `save`; `load` restores saved limits
+**and directions**, while `defaults` restores firmware defaults (all normal in
+the shipped configuration). Do not swap MIN_US/MAX_US to reverse travel: the
+limits still require min < max.
+
+Raw `test` commands are intentionally unaffected, so endpoints can be calibrated
+in real microseconds. To verify reversed finger motion, leave the linkage
+unloaded, finish calibration, send `run`, and use fresh transmitter commands.
+Keep clear of travel: the same input can target the opposite endpoint after
+inversion. No automatic sweep or physical direction verification is performed.
 
 ## Reload, reset and migration
 
@@ -144,7 +182,7 @@ run
 
 `defaults` alone changes RAM only; it does not erase the saved profile. Pins
 remain firmware-owned. Changing source-code defaults will not override an intact
-saved profile. Limits follow **channel numbers**, so changing pin assignment,
+saved profile. Limits and direction follow **channel numbers**, so changing pin assignment,
 servos or mechanisms requires recalibration; inspect the profile before operation.
 Firmware upload/erase tools can have different EEPROM retention behavior: the
 persistence guarantee here concerns normal receiver resets and power cycles,
@@ -158,33 +196,49 @@ feature. Other EEPROM addresses are untouched. The bundled
 provides `length`, `read` and `update`. No external EEPROM component is required
 on the supported Uno R3.
 
-There are two 31-byte slots at offsets 0 and 31. Multibyte values are explicitly
+There are two 31-byte slots at offsets 0 and 31; their positions and total
+62-byte reservation are unchanged from schema v1. Multibyte values are explicitly
 little-endian; no compiler struct layout is written:
 
 | Byte offset in slot | Meaning |
 | --- | --- |
 | 0 | Commit marker `0xA5`; invalidated before replacing this slot |
 | 1–2 | Magic bytes `F`, `S` |
-| 3 | Storage schema version 1 (independent of RF protocol version) |
-| 4 | Channel count 5 |
+| 3 | Current storage schema version 2 (independent of RF protocol version) |
+| 4 | Reversed-channel bitmask: bit 0→channel 0 through bit 4→channel 4; bits 5–7 must be zero |
 | 5–8 | Unsigned generation counter; wrap-aware newest-record selection |
 | 9–28 | Five pairs of unsigned 16-bit min/max microseconds, channel order 0–4 |
 | 29–30 | CRC-16/CCITT-FALSE over bytes 1–28; polynomial `0x1021`, initial `0xFFFF` |
 
 A changed save writes the older/unused slot: invalidate its marker, update the
 payload/CRC, verify the bytes, then commit the marker last. The previous slot
-remains intact. Loading checks the marker, magic, version, count, CRC and every
-pulse range, then selects the newest valid complete record. Corruption of the
+remains intact. Loading checks the marker, magic, version-specific count/flags, CRC and every
+pulse range, then selects the newest valid complete record. Schema v2 has exactly
+five implicit channels and rejects reserved direction bits. Corruption of the
 newer record can fall back to the older one. If neither is valid, firmware
 uses defaults. Unknown schema versions are rejected rather than guessed.
 
-An identical profile skips **all** EEPROM writes, including generation/marker
-changes. Other saves use `EEPROM.update` so unchanged bytes are not programmed.
+Existing **schema v1** records are read with their original limits and all
+channels set to normal direction, preserving the previous firmware behavior.
+In v1, byte 4 was channel count 5; in v2 it is the direction bitmask, still covered
+by the CRC. Loading does not write or upgrade EEPROM. The next explicit `save`
+creates v2 in the other slot, retaining the previous complete record during the
+upgrade. This one-time upgrade writes even if the limits were unchanged.
+
+Older firmware cannot interpret v2. A downgrade may use an older remaining v1
+profile or firmware defaults, losing the latest endpoints/directions. Do not
+expect safe profile reuse on downgrade; record and reverify settings with a
+compatible firmware. If recovery selects an older record, its complete profile,
+including its prior direction, is restored: inspect `show` after recovery.
+
+An identical **current-schema** profile skips **all** EEPROM writes, including
+generation/marker changes. Direction-only edits count as profile changes. Other saves use `EEPROM.update` so unchanged bytes are not programmed.
 Wear is spread between two slots, not across the whole EEPROM. Save deliberately;
 do not use it as a repeated heartbeat or continuous logging operation.
 
 Host tests simulate interruption before changed-byte writes, corruption, invalid
-ranges, counter wrap, capacity/write failures and reload. The journal and CRC
+ranges, direction-only changes, legacy migration, counter wrap, capacity/write
+failures and reload. The journal and CRC
 reduce recovery risks, but do not establish physical brownout immunity or detect
 every possible corruption. Stable power and hardware-level bench checks remain
 necessary; no real EEPROM endurance or power-interruption test has been performed.

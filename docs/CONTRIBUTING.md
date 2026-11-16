@@ -23,6 +23,7 @@ examples/readings.cpp    Executable synthetic reading example using the core
 tests/core_test.cpp      Host behavior tests of the portable core
 tests/receiver_test.cpp  Five-channel state and pulse/output lifecycle tests
 tests/calibration_test.cpp  Parser/session/journal interruption and recovery tests
+tests/inversion_test.cpp  Direction mapping, persistence and v1/v2 migration tests
 tests/receiver_firmware_test.cpp  Actual receiver entry points with host doubles
 tests/support/          Explicit host Arduino/RF24/Servo/EEPROM substitutes
 docs/

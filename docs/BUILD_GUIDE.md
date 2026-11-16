@@ -268,9 +268,10 @@ fixed by the configuration, not by how the glove is worn.
 3. With horns/linkages unloaded, connect one servo signal at a time to D2–D6.
    Enter `cal` on the receiver serial monitor and follow the
    [individual calibration guide](SERVO_CALIBRATION.md): `set CH MIN_US MAX_US`,
-   `test CH US`, then explicit `save`. Start with a narrow verified range and
+   `test CH US`, optional `invert CH 0|1`, then explicit `save`. Start with a narrow verified range and
    test one servo at a time before fitting a mechanism. Defaults are 1000–2000 µs;
-   command 10 maps to min, 170 to max, and 90 to the midpoint. These are commands,
+   normally command 10 maps to min, 170 to max, and 90 to the midpoint.
+   `invert CH 1` swaps command direction for that servo; raw pulse tests stay literal. These are commands,
    not physical joint-angle measurements.
 4. Use `show` to verify all five settings and `run` to resume fresh RF commands.
    No rebuild is needed for serial endpoint changes; EEPROM reloads them after
@@ -294,7 +295,8 @@ and supply check in this section needs actual bench validation.
 
 Connect to the receiver at 115200 baud; keep transmitter motion disabled until
 `cal` is acknowledged. `cal` and `stop` detach all outputs and pause RF actuation.
-A `test` command drives just the selected servo for up to a 1000 ms loop-checked
+A `invert CH 1` reverses one channel (`0` restores normal) without changing its
+limits; `show` reports its direction. A `test` command drives just the selected servo for up to a 1000 ms loop-checked
 interval; `save` detaches before writing EEPROM. `run` clears stale radio data
 and resumes only on fresh packets. Test every channel and verify saved values
 with `show` after a reset. Follow [SERVO_CALIBRATION.md](SERVO_CALIBRATION.md) for
@@ -314,7 +316,7 @@ receiver pulse endpoints.
 | Excessive noise | Ground, jumper length, supply stability, moving contacts | Fix the electrical cause before increasing filtering |
 | ACKs fail | Matching firmware settings, radio supply, SPI pin labels, plus variant | Test radios without the servo load |
 | Servo jitters or radio resets | External supply capacity and ground routing | Remove load, inspect rails and return path |
-| Motion is opposite to desired | Reference divider lowers ADC as bend increases | Adapt the command mapping and its tests for your mechanism |
+| Motion is opposite to desired | Reference divider lowers ADC as bend increases | On the receiver: `cal`, `invert CH 1`, `save`, `run`; verify unloaded |
 | Motion hits a stop | Servo-specific pulse limits and linkage travel | Disconnect the linkage; tune receiver endpoints in `cal` mode |
 | Serial edits are rejected | Wrong board/baud/line ending or RF mode active | Use the receiver at 115200, newline, then `cal` |
 | Limits revert after reset | RAM-only edit, save failure or invalid EEPROM | Check `show`, wait for `save` success, inspect load/fallback status |

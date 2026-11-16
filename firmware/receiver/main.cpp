@@ -20,11 +20,12 @@ void detachAll() {
 }
 
 void showSettings() {
-  Serial.println(F("# channel,pin,min_us,max_us"));
+  Serial.println(F("# channel,pin,min_us,max_us,reversed"));
   for(uint8_t i=0;i<flex::kFingers;++i) {
     const flex::ServoSettings& settings=calibration.settings()[i];
     Serial.print(F("# "));Serial.print(i);Serial.print(',');Serial.print(settings.pin);
-    Serial.print(',');Serial.print(settings.minUs);Serial.print(',');Serial.println(settings.maxUs);
+    Serial.print(',');Serial.print(settings.minUs);Serial.print(',');Serial.print(settings.maxUs);
+    Serial.print(',');Serial.println(settings.reversed?1:0);
   }
 }
 
@@ -42,7 +43,7 @@ bool handleSessionCommand(flex::CommandKind kind) {
     case K::None:return true;
     case K::Invalid:Serial.println(F("# ERR invalid command or values"));return true;
     case K::Help:
-      Serial.println(F("# help | show | cal | set CH MIN_US MAX_US | test CH US | stop | save | load | defaults | run"));
+      Serial.println(F("# help | show | cal | set CH MIN_US MAX_US | invert CH 0|1 | test CH US | stop | save | load | defaults | run"));
       return true;
     case K::Show:showSettings();return true;
     case K::Calibrate:case K::Stop:
@@ -64,6 +65,11 @@ void handleCommand(flex::SerialCommand command) {
       if(calibration.set(command.channel,command.first,command.second)) {
         detachAll();Serial.println(F("# OK limits changed in RAM; save explicitly"));
       } else Serial.println(F("# ERR invalid limits"));
+      break;
+    case K::Invert:
+      if(calibration.setReversed(command.channel,command.first!=0)) {
+        detachAll();Serial.println(F("# OK direction changed in RAM; save explicitly"));
+      } else Serial.println(F("# ERR invalid channel"));
       break;
     case K::Test:
       if(calibration.preview(command.channel,command.first,millis())) {
