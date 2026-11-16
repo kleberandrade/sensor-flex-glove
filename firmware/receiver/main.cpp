@@ -1,11 +1,12 @@
 #include <Arduino.h>
 #include <Servo.h>
-#include "flex/core.hpp"
+#include "flex/receiver.hpp"
+#include "flex/servo_output.hpp"
 #include "flex/hardware.hpp"
 #include "flex/radio.hpp"
 RF24 radio(hardware::kCePin, hardware::kCsnPin);
-Servo servo;
-uint32_t lastValid = 0;
+Servo servos[flex::kFingers];
+flex::Receiver receiver;
 
 void setup() {
   Serial.begin(115200);
@@ -15,28 +16,22 @@ void setup() {
   }
   radio.openReadingPipe(1, hardware::kAddress);
   radio.startListening();
-  Serial.println(F("# Waiting for valid finger 0; servo detached"));
+  Serial.println(F("# Waiting for valid commands; all five servos detached"));
+  Serial.println(F("# angle0,angle1,angle2,angle3,angle4 (ignored when channel invalid)"));
 }
 
 void loop() {
-  // Drain at most the hardware FIFO capacity so timeout always gets CPU time.
+  // Bound the drain so timeout/output handling always gets CPU time.
   for (uint8_t pending = 0; pending < 3 && radio.available(); ++pending) {
     uint8_t bytes[flex::kPacketSize];
     radio.read(bytes, sizeof(bytes));
-    flex::Packet packet = {};
-    if (!flex::decode(bytes, sizeof(bytes), packet)) continue;
-    if (!(packet.mask & 1)) {
-      servo.detach();
-      continue;
+    if (!receiver.receive(bytes, sizeof(bytes), millis())) continue;
+    for (uint8_t i = 0; i < flex::kFingers; ++i) {
+      Serial.print(receiver.command(i).angle);
+      Serial.print(i + 1 == flex::kFingers ? '\n' : ',');
     }
-    lastValid = millis();
-    // Set the target before attach, avoiding the Servo library's default pulse.
-    servo.write(packet.angles[0]);
-    if (!servo.attached()) servo.attach(hardware::kServoPin);
-    Serial.println(packet.angles[0]);
   }
-  if (servo.attached() && flex::expired(millis(), lastValid)) {
-    servo.detach();
-    Serial.println(F("# TIMEOUT: servo detached"));
-  }
+  receiver.tick(millis());
+  for (uint8_t i = 0; i < flex::kFingers; ++i)
+    flex::applyServo(servos[i], receiver.command(i), hardware::kServos[i]);
 }

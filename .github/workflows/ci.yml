@@ -15,8 +15,7 @@ jobs:
         run: make test example
       - name: Exercise memory and undefined-behavior checks
         run: |
-          c++ -std=c++11 -Wall -Wextra -Werror -pedantic -Iinclude -fsanitize=address,undefined -fno-omit-frame-pointer tests/core_test.cpp -o /tmp/flex-tests
-          /tmp/flex-tests
+          make test BUILD_DIR=build/sanitized CXXFLAGS="-std=c++11 -Wall -Wextra -Werror -pedantic -Iinclude -fsanitize=address,undefined -fno-omit-frame-pointer"
   firmware:
     runs-on: ubuntu-24.04
     steps:

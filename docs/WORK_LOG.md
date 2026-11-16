@@ -60,3 +60,12 @@
 - Preserved the one-channel quick-start default and clarified that the receiver continues to actuate channel 0 only. No five-servo behavior or physical validation is claimed.
 - Validated all 32 labeled connections in the SVG and resolved breadboard strips to confirm that the five ADC junctions are distinct and not directly tied to either rail. Checked local Markdown links/anchors and SVG XML, then rendered/inspected the final diagram.
 - Built both `reader` and `transmitter` successfully for Uno with `kActiveFingers=5` in an isolated temporary project using the pinned libraries/toolchain. Removed that temporary project automatically; the tracked default remains 1 and no firmware source was changed. These are compilation and diagram checks, not a physical five-sensor test.
+
+## Five-servo receiver implementation (2026-11-16)
+
+- Applied ub-mode and test-master. Added receiver policy/output tests first and observed the expected missing-header failure. Implemented five independent commands with per-channel validity, malformed-frame rejection without deadline refresh, 500 ms rollover-safe expiry and recovery.
+- Added a portable Servo output adapter with per-channel pulse settings. Commands 10–170 map to explicit 1000–2000 µs default endpoints, clamped before output; pulse targets are primed before attach/re-attach. Verified actual pinned Servo library behavior before choosing default attach bounds (avoids AVR custom-bound int8_t offset limitations).
+- Receiver now maps channels 0–4 to D2–D6. The one-sensor transmitter default is preserved: inactive mask bits leave other outputs detached. Wire format v1 is unchanged.
+- Added host tests of the actual receiver entry points using explicit Arduino/RF24/Servo doubles, after observing the missing host-Arduino-header failure. These check boot, all five distinct pin/pulse outputs, malformed frame behavior, exact timeout, partial recovery, zero-mask detach and bounded FIFO drain. Doubles do not simulate electrical hardware or AVR interrupt timing.
+- `make test example`, all three host test executables under AddressSanitizer/UndefinedBehaviorSanitizer, and all three real Uno builds passed. Corrected a binary literal in the test to hexadecimal to retain strict C++11 compatibility. CI now runs every host test in both normal and sanitizer builds.
+- Invoked crapper, dryer (0.8) and mutator scan again; C++ remains unsupported and all returned no supported source files. No tool metric is claimed.
