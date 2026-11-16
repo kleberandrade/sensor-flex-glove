@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1150" viewBox="0 0 1500 1150" role="img" aria-labelledby="title desc">
+<title id="title">Five-servo receiver: D2 through D6, fused external power and common ground</title>
+<desc id="desc">Receiver Uno channels 0 to 4 drive index, middle, ring, little and thumb servo signals on D2, D3, D4, D5 and D6. An external regulated 4.8 volt supply feeds a fused distribution block and five separate servo power branches, with a common ground return and a separate ground link to the Uno. The reference budget is 5 times 2 amperes plus 20 percent headroom, or 12 amperes, to be checked against actual parts. Motor current does not pass through Uno or breadboard rails. Named terminals do not represent physical header order.</desc>
+<style>text{font-family:Arial,Helvetica,sans-serif;fill:#18354a;font-size:18px}.title{font-size:32px;font-weight:bold}.heading{font-size:24px;font-weight:bold}.small{font-size:16px}.tiny{font-size:14px}.white{fill:white}.wire{fill:none;stroke-width:4;stroke-linejoin:round;stroke-linecap:round}</style>
+<rect width="1500" height="1150" fill="#f4f8fb"/>
+<text x="35" y="48" class="title">Five-servo receiver · signal pins and independent motor power</text>
+<text x="35" y="81">Named terminals, not physical header order · original reference diagram · verify actual parts before powering</text>
+<rect x="25" y="102" width="1450" height="864" rx="18" fill="white" stroke="#d3dfe8" stroke-width="2"/>
+<rect x="410" y="120" width="340" height="99" rx="12" fill="#fff1cf" stroke="#d4b774"/>
+<text x="429" y="151" class="heading">External regulated supply</text>
+<text x="429" y="178">4.8 V nominal · 12 A reference budget</text>
+<text x="429" y="202" class="tiny">5 × 2 A = 10 A, plus 20% planning headroom</text>
+<rect x="60" y="235" width="250" height="557" rx="15" fill="#137d89"/>
+<text x="81" y="274" class="heading white">RECEIVER UNO R3</text>
+<text x="81" y="305" class="small white">USB-powered logic</text>
+<rect x="840" y="251" width="40" height="629" rx="7" fill="#f8e0da"/>
+<rect x="980" y="251" width="40" height="629" rx="7" fill="#e1e6eb"/>
+<text x="837" y="240" class="small">V+</text><text x="977" y="240" class="small">GND</text>
+<path d="M750 153 H786 M818 153 H860 V880" class="wire" stroke="#cc503d" data-from="Supply.+" data-to="Distributor.+"/>
+<rect x="786" y="141" width="32" height="24" rx="4" fill="#fff5dc" stroke="#8f7949" stroke-width="2"/>
+<text x="787" y="131" class="tiny">F1</text>
+<path d="M750 191 H1000 V880" class="wire" stroke="#263746" data-from="Supply.-" data-to="Distributor.-"/>
+<text x="1040" y="156" class="small">Fused distribution block / harness</text>
+<text x="1040" y="184" class="small">Size fuse, wiring and connectors for load.</text>
+<text x="81" y="340" class="small" style="fill:white">D2 · CH0</text>
+<rect x="1150" y="312" width="280" height="93" rx="10" fill="#526a92"/>
+<text x="1234" y="341" class="small" style="fill:white">INDEX · SERVO 1</text>
+<text x="1166" y="340" class="tiny" style="fill:white">SIG</text>
+<text x="1166" y="370" class="tiny" style="fill:white">V+</text>
+<text x="1166" y="396" class="tiny" style="fill:white">GND</text>
+<path d="M310 335 H1150" class="wire" stroke="#23845a" data-from="Uno.D2" data-to="Servo1.SIG"/>
+<path d="M860 365 H1150" class="wire" stroke="#cc503d" data-from="Distributor.+" data-to="Servo1.V+"/>
+<path d="M1000 391 H1150" class="wire" stroke="#263746" data-from="Distributor.-" data-to="Servo1.GND"/>
+<circle cx="860" cy="365" r="5" fill="#cc503d"/>
+<circle cx="1000" cy="391" r="5" fill="#263746"/>
+<text x="520" y="324" class="tiny" >A0 → packet CH0 → D2</text>
+<text x="81" y="445" class="small" style="fill:white">D3 · CH1</text>
+<rect x="1150" y="417" width="280" height="93" rx="10" fill="#526a92"/>
+<text x="1234" y="446" class="small" style="fill:white">MIDDLE · SERVO 2</text>
+<text x="1166" y="445" class="tiny" style="fill:white">SIG</text>
+<text x="1166" y="475" class="tiny" style="fill:white">V+</text>
+<text x="1166" y="501" class="tiny" style="fill:white">GND</text>
+<path d="M310 440 H1150" class="wire" stroke="#2e79bd" data-from="Uno.D3" data-to="Servo2.SIG"/>
+<path d="M860 470 H1150" class="wire" stroke="#cc503d" data-from="Distributor.+" data-to="Servo2.V+"/>
+<path d="M1000 496 H1150" class="wire" stroke="#263746" data-from="Distributor.-" data-to="Servo2.GND"/>
+<circle cx="860" cy="470" r="5" fill="#cc503d"/>
+<circle cx="1000" cy="496" r="5" fill="#263746"/>
+<text x="520" y="429" class="tiny" >A1 → packet CH1 → D3</text>
+<text x="81" y="550" class="small" style="fill:white">D4 · CH2</text>
+<rect x="1150" y="522" width="280" height="93" rx="10" fill="#526a92"/>
+<text x="1234" y="551" class="small" style="fill:white">RING · SERVO 3</text>
+<text x="1166" y="550" class="tiny" style="fill:white">SIG</text>
+<text x="1166" y="580" class="tiny" style="fill:white">V+</text>
+<text x="1166" y="606" class="tiny" style="fill:white">GND</text>
+<path d="M310 545 H1150" class="wire" stroke="#8e5bab" data-from="Uno.D4" data-to="Servo3.SIG"/>
+<path d="M860 575 H1150" class="wire" stroke="#cc503d" data-from="Distributor.+" data-to="Servo3.V+"/>
+<path d="M1000 601 H1150" class="wire" stroke="#263746" data-from="Distributor.-" data-to="Servo3.GND"/>
+<circle cx="860" cy="575" r="5" fill="#cc503d"/>
+<circle cx="1000" cy="601" r="5" fill="#263746"/>
+<text x="520" y="534" class="tiny" >A2 → packet CH2 → D4</text>
+<text x="81" y="655" class="small" style="fill:white">D5 · CH3</text>
+<rect x="1150" y="627" width="280" height="93" rx="10" fill="#526a92"/>
+<text x="1234" y="656" class="small" style="fill:white">LITTLE · SERVO 4</text>
+<text x="1166" y="655" class="tiny" style="fill:white">SIG</text>
+<text x="1166" y="685" class="tiny" style="fill:white">V+</text>
+<text x="1166" y="711" class="tiny" style="fill:white">GND</text>
+<path d="M310 650 H1150" class="wire" stroke="#c48b19" data-from="Uno.D5" data-to="Servo4.SIG"/>
+<path d="M860 680 H1150" class="wire" stroke="#cc503d" data-from="Distributor.+" data-to="Servo4.V+"/>
+<path d="M1000 706 H1150" class="wire" stroke="#263746" data-from="Distributor.-" data-to="Servo4.GND"/>
+<circle cx="860" cy="680" r="5" fill="#cc503d"/>
+<circle cx="1000" cy="706" r="5" fill="#263746"/>
+<text x="520" y="639" class="tiny" >A3 → packet CH3 → D5</text>
+<text x="81" y="760" class="small" style="fill:white">D6 · CH4</text>
+<rect x="1150" y="732" width="280" height="93" rx="10" fill="#526a92"/>
+<text x="1234" y="761" class="small" style="fill:white">THUMB · SERVO 5</text>
+<text x="1166" y="760" class="tiny" style="fill:white">SIG</text>
+<text x="1166" y="790" class="tiny" style="fill:white">V+</text>
+<text x="1166" y="816" class="tiny" style="fill:white">GND</text>
+<path d="M310 755 H1150" class="wire" stroke="#168e9b" data-from="Uno.D6" data-to="Servo5.SIG"/>
+<path d="M860 785 H1150" class="wire" stroke="#cc503d" data-from="Distributor.+" data-to="Servo5.V+"/>
+<path d="M1000 811 H1150" class="wire" stroke="#263746" data-from="Distributor.-" data-to="Servo5.GND"/>
+<circle cx="860" cy="785" r="5" fill="#cc503d"/>
+<circle cx="1000" cy="811" r="5" fill="#263746"/>
+<text x="520" y="744" class="tiny" >A4 → packet CH4 → D6</text>
+<text x="81" y="784" class="small" style="fill:white">GND</text>
+<path d="M310 779 H377 V908 H1000 V880" class="wire" stroke="#263746" data-from="Uno.GND" data-to="Distributor.-"/>
+<circle cx="1000" cy="880" r="5" fill="#263746"/>
+<text x="405" y="895" class="small" >Separate receiver ground link; motor returns go directly to the distributor.</text>
+<text x="60" y="831" class="small" >Radio pins remain separate:</text>
+<text x="60" y="858" class="small" >CE D7 · CSN D8 · SPI D11–D13</text>
+<text x="60" y="885" class="small" >Radio VCC = Uno 3.3V, never motor V+.</text>
+<text x="55" y="943" class="small" >Only dots/endpoints connect. Colored signal wires cross the power bars without joining them. Use insulated wiring.</text>
+<rect x="25" y="988" width="1450" height="127" rx="18" fill="#edf4f8" stroke="#d3dfe8"/>
+<text x="47" y="1023" class="heading" >No servo motor current through Uno or breadboard rails. Do not join motor V+ to Uno 5V / VIN.</text>
+<text x="47" y="1056" class="small" >Pulse endpoints default to 1000–2000 µs per servo; tune each range unloaded. Invalid mask bits detach their channels.</text>
+<text x="47" y="1087" class="small" >500 ms without a valid command detaches that output. Detach stops pulses; it neither cuts motor power nor guarantees release.</text>
+<text x="35" y="1140" class="tiny" >Original SVG · MIT · Reference supply budget, not measured demand. Read the hardware guide for sizing, protection and staged checks.</text>
+</svg>

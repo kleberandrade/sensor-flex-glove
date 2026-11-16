@@ -54,7 +54,7 @@
 <rect x="575" y="390" width="686" height="84" rx="12" fill="#fff4d9"/>
 <text x="595" y="421">The numbers demonstrate the algorithm, not a measured hand pose.</text>
 <text x="595" y="449" class="small">Servo command ≠ physical finger angle. No bench measurements are shown.</text>
-<text x="575" y="522" class="heading">03 / Inspect data or control one servo</text>
+<text x="575" y="522" class="heading">03 / Inspect data or control servos</text>
 <rect x="575" y="548" width="316" height="143" rx="14" class="card"/>
 <text x="595" y="582" class="heading">Standalone reader</text>
 <text x="595" y="615">Uno → USB serial → CSV</text>
@@ -62,8 +62,8 @@
 <text x="595" y="671" class="small">Start here to check the sensor.</text>
 <rect x="913" y="548" width="348" height="143" rx="14" class="card"/>
 <text x="933" y="582" class="heading">Wireless demonstration</text>
-<text x="933" y="615">Uno + radio → receiver → D2</text>
-<text x="933" y="645" class="small">One servo; separate external supply.</text>
+<text x="933" y="615">Uno + radio → receiver → D2–D6</text>
+<text x="933" y="645" class="small">Up to five servos; separate supply.</text>
 <text x="933" y="671" class="small">500 ms without valid data → detach.</text>
 <text x="42" y="770" class="small">Original conceptual diagram · MIT · See the build guide for actual wiring, supply limits and assembly steps.</text>
 </svg>

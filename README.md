@@ -7,7 +7,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 Read resistive flex sensors on an Arduino Uno R3, calibrate and smooth their
-readings, and send bounded servo commands to another Uno over nRF24L01+ radio.
+readings, and send bounded commands to five independent receiver servos over nRF24L01+ radio.
 A standalone serial reader works without a radio or receiver.
 
 The project is a **glove** that reads finger bending with resistive flex sensors.
@@ -37,7 +37,7 @@ before wiring.
 
 ![Electronics only: flex divider, two Arduino Uno boards, nRF24L01+ radios and an externally powered servo](docs/images/electronics-overview.svg)
 
-This separate component illustration shows the **electronics without the glove**:
+This one-channel subset shows the **electronics without the glove**:
 the A0 sensor divider, the two Uno/radio nodes, and the receiver's servo with its
 own power supply. It is an original reference illustration, not a photograph of
 an assembled prototype. Follow the [detailed circuit and electrical pinout](docs/hardware/README.md#circuit-and-pinout)
@@ -74,19 +74,54 @@ constexpr uint8_t kActiveFingers = 5;
 Rebuild and upload `reader` or `transmitter`, then move **all five fingers** during
 the five-second calibration session. CSV channels 0–4 correspond to A0–A4.
 The repository default stays at one sensor so the initial quick start works;
-five sensors require the configuration change above. The supplied receiver
-still actuates only channel 0: five-channel sensing does not add five servos.
+five sensors require the configuration change above. The receiver maps channels 0–4 to servos on D2–D6. With the one-sensor
+default, only channel 0 is valid and the other four outputs stay detached.
+
+## Five-servo receiver and power
+
+![Five-servo receiver signals D2–D6 and fused external power distribution](docs/images/five-servo-receiver.svg)
+
+| Finger (suggested) | Sensor / packet channel | Receiver signal |
+| --- | --- | --- |
+| Index | A0 / 0 | D2 |
+| Middle | A1 / 1 | D3 |
+| Ring | A2 / 2 | D4 |
+| Little | A3 / 3 | D5 |
+| Thumb | A4 / 4 | D6 |
+
+The receiver handles all five channels automatically; enable five connected
+sensors on the transmitter as shown above. Each validity bit controls its own
+servo. A cleared bit detaches that output; malformed packets are discarded
+without moving servos or extending their deadlines. After 500 ms without a
+valid command, an enabled output detaches and resumes on its next valid command.
+A zero mask during calibration detaches every output. Loop/serial scheduling
+adds latency; these are software thresholds, not measured physical timings.
+
+Use a **separate regulated servo supply and fused power distributor**, with
+individual power/return branches to the servos and one common-ground link to the
+receiver. Never run motor current through the Uno or breadboard rails, and do
+not connect servo V+ to Uno 5V/VIN. For five reference SG90s, the planning budget
+is 5 × 2 A = 10 A, plus 20% headroom: **4.8 V nominal, 12 A**. This is a calculated
+starting budget, not measured demand or a universal requirement; verify the
+actual servos, startup/stall load, wiring, connectors and protection. See the
+[source-backed power guide](docs/hardware/README.md#five-servo-receiver-and-power).
+
+Each `{pin, minUs, maxUs}` entry in `hardware::kServos` configures one output.
+Commands 10–170 span **1000–2000 µs by default**, with independent limits for
+mechanical calibration. Check every servo unloaded before fitting a horn/linkage.
+These endpoints are not a guarantee of safe travel or physical degrees. Detach
+stops command pulses; it does not cut power or guarantee torque release.
 
 ## Applications
 
 - Teach resistive sensing, ADC acquisition, calibration and the noise/latency trade-off.
-- Demonstrate one-finger wireless control of an unloaded servo.
+- Demonstrate up to five independently controlled servos, starting with one unloaded output.
 - Record labeled bend data for gesture-recognition experiments.
 - Build a host-side bridge for game, music or visual controls.
 - Explore comfortable wearable control mappings and accessibility prototypes.
 
 The first two demonstrations use the supplied firmware. Dataset classification,
-game/MIDI/HID interfaces, multi-servo hands and assistive products require
+game/MIDI/HID interfaces, mechanical robotic hands and assistive products require
 additional implementation and validation. See [applications and extension paths](docs/APPLICATIONS.md)
 for what is available now and what each idea needs.
 
@@ -150,19 +185,21 @@ pio run -e transmitter -t upload --upload-port /dev/cu.usbmodemTRANSMITTER
 The port names above are placeholders; list actual ports with `pio device list`.
 Use separate serial monitors at 115200 baud. The transmitter reports ACK status
 (`1` acknowledged, `0` failed). ACK confirms radio receipt, not servo movement.
-The receiver prints accepted finger-0 angles and timeout messages.
+The receiver prints accepted `valid_mask,angle0,angle1,angle2,angle3,angle4` CSV
+and `# attached/detached channel N` transition messages. Mask bits 0–4 identify
+valid channels; ignore angles whose bits are clear. Mask 31 means all five are
+valid. Serial comments also report startup and radio initialization errors.
 
-The receiver starts detached. It stops sending servo pulses on an explicitly
-invalid finger-0 calibration packet or after 500 ms without a valid finger-0
-command, and resumes on the next valid command. Detach releases the servo's
-command signal; it does not cut power or guarantee a safe mechanical position.
-Check travel with the horn/linkage disconnected before loading a mechanism.
+All five receiver outputs start detached. Validity and timeout are evaluated per
+channel as described above. The single-sensor quick start can still use just the
+D2 servo; leave unused servo power/signals disconnected. Follow the five-servo
+power guide before adding the other four actuators.
 
 ## Signal processing and configuration
 
 - One connected sensor on A0 is enabled by default. Change `kActiveFingers` in
   [`hardware.hpp`](include/flex/hardware.hpp) to 2–5 only after wiring all those
-  consecutive inputs. The receiver currently controls one servo on D2.
+  consecutive inputs. Receiver channels 0–4 drive D2–D6 independently.
 - A sample is scheduled every 20 ms (nominal 50 Hz, without catch-up bursts).
   Radio retries and serial output can add delay. The first ADC conversion is
   discarded after channel selection.
@@ -182,6 +219,9 @@ The portable API in [`core.hpp`](include/flex/core.hpp) supplies `Average`,
 `Calibration`, `Packet`, `encode`, `decode` and `expired`. Feed `Average::add`
 only validated 10-bit ADC samples. `Calibration::observe/angle` reject samples
 outside 0–1023. Invalid calibration leaves the output argument unchanged.
+`receiver.hpp` owns validated command state and timeouts; `servo_output.hpp`
+maps/clamps commands to configured pulse limits and applies them to a Servo-like
+adapter. `hardware.hpp` validates the configured pulse limits at compile time.
 
 ## Examples and tests
 
@@ -194,8 +234,12 @@ pio run
 The host example uses synthetic ADC readings and prints deterministic
 `raw,filtered,angle` CSV. It exercises the same core as the firmware. Host tests
 check startup bias, full-scale accumulation, window replacement, calibration
-reset and limits, invalid protocol fields and timeout rollover. CI runs these
-checks, sanitizers and all three firmware builds. The CI badge reports GitHub's
+reset/limits and invalid protocol fields. Receiver tests cover five distinct
+commands, partial/zero masks, malformed-frame rejection without deadline refresh,
+exact timeout/rollover, recovery, pulse bounds and priming before attachment.
+A separate host test executes the actual receiver entry points with explicit
+RF/Arduino/Servo doubles; these do not simulate AVR timer or physical behavior.
+CI runs all three host test executables, sanitizers and all three firmware builds. The CI badge reports GitHub's
 actual workflow status; no hardware or coverage badge is claimed.
 
 See [validation and work log](docs/WORK_LOG.md) for commands and limitations.
@@ -205,7 +249,7 @@ performed as part of this modernization.
 ## Layout and migration
 
 - `firmware/transmitter/`: sensor acquisition, calibration session and telemetry.
-- `firmware/receiver/`: radio input and one-servo output with loss timeout.
+- `firmware/receiver/`: radio input and five-servo output with per-channel validity/timeout.
 - `include/flex/`: portable processing/protocol and shared hardware settings.
 - `tests/`, `examples/`: executable host behavior checks and reading example.
 - `docs/hardware/`: original SVG reference circuit, BOM and primary sources.
@@ -218,7 +262,15 @@ The old `RF_send/RF_send.ino` and `RF_receive/RF_receive.ino` entry points moved
 to the firmware directories. Use PlatformIO environments instead of opening the
 old sketches. The old firmware remains available in Git at `7e0747e`.
 
-**Flash both wireless nodes together.** Protocol v1 uses exactly 10 bytes:
+When migrating from the original native-`int` protocol, flash both nodes together.
+The five-servo receiver upgrade preserves protocol v1, so an existing v1
+transmitter stays compatible. Its one-channel default leaves D3–D6 detached;
+enable five wired sensors for five-channel motion. Receiver pulse mapping now
+uses explicit 1000–2000 µs endpoints instead of the old default 544–2400 µs angle
+mapping: recheck every actuator's travel before using a mechanism. Receiver CSV
+also changes from one angle to a validity mask plus five angles.
+
+Protocol v1 uses exactly 10 bytes:
 `0xF1`, version `1`, little-endian unsigned 16-bit sequence, a five-bit valid
 channel mask, then five unsigned 8-bit angles. Inactive channels carry 10 with
 their mask bit clear. Decoding checks length, magic, version, reserved mask bits
@@ -230,7 +282,7 @@ Both nodes use address `flex1`, channel 76 (2476 MHz), 250 kbps, low PA and a
 fixed payload. These replace the old native-`int` struct, address and channel
 115 (2515 MHz). The plus radio variant is required for 250 kbps. Consult local
 radio rules for your deployment; channel choice alone does not establish
-regulatory compliance. Old and new firmware are incompatible.
+regulatory compliance. The original 2017 firmware and protocol v1 are incompatible.
 
 ## License
 

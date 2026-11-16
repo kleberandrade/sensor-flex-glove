@@ -1,8 +1,8 @@
 # Build a flex-sensor glove, step by step
 
 This guide builds the reference design in stages: first a single sensor and USB
-serial output, then a wearable mounting, then wireless control of one unloaded
-servo. Each stage has a check before adding more parts. All assembly procedures
+serial output, then a wearable mounting, then wireless control of up to five
+servos, starting with one unloaded output. Each stage has a check before adding more parts. All assembly procedures
 below still need validation on your actual hardware; the repository's automated
 checks exercise software and compilation.
 
@@ -13,7 +13,8 @@ checks exercise software and compilation.
 Start with **one finger, one flex sensor, one Uno and the `reader` environment**.
 That is already a useful bend-to-command demonstration. Add the second Uno and
 the radios only after stable readings are visible. Five sensor channels are
-supported by the transmitter, but the provided receiver controls one servo.
+supported by the transmitter and receiver; the default one-sensor transmitter
+keeps the other receiver outputs detached.
 
 Have a computer with USB, a breadboard, a multimeter, short jumpers, a glove,
 soft fabric loops or removable tape, and the [reference BOM](hardware/README.md#bill-of-materials).
@@ -174,8 +175,10 @@ pio run -e transmitter -t upload --upload-port /dev/cu.usbmodemTRANSMITTER
 ```
 
 Open separate monitors for the two real ports. Calibrate the transmitter. The
-transmitter should report successful ACKs and the receiver should print valid
-finger-0 commands. A `# ERROR` line indicates radio initialization failed; the
+transmitter should report successful ACKs and the receiver should print
+`valid_mask,angle0,angle1,angle2,angle3,angle4` CSV. A one-sensor calibration
+normally produces mask 1; five valid channels produce mask 31. Attach/detach
+changes appear as comment lines. A `# ERROR` line indicates radio initialization failed; the
 firmware then stops normal operation until reset. An unsupported 250 kbps mode
 is also treated as an initialization error.
 
@@ -190,10 +193,10 @@ is also treated as an initialization error.
 4. Check polarity, supply voltage and pulse/travel limits before powering.
 5. Run the pair and observe the response without a person or mechanism in its
    travel path. Default commands span 10–170; restrict the pulse limits in
-   `servo.attach(...)` if the actual servo needs a narrower range.
+   `hardware::kServos` if the actual servo needs a narrower range.
 6. Remove transmitter power and verify receiver timeout handling. The firmware
-   detaches after 500 ms without a valid finger-0 command. Recalibrating also
-   sends invalid commands and detaches the servo while the session runs.
+   detaches each enabled output after 500 ms without its valid command.
+   Recalibrating also sends invalid commands and detaches the servo while the session runs.
 
 Detaching stops pulse generation but neither disconnects servo power nor proves
 that a mechanical load is safe. Validate the complete setup before adding load.
@@ -246,10 +249,41 @@ from 1 to 5 enable that many **consecutive** inputs; for example, 3 enables A0�
 not A0 and A4 alone. Return `kActiveFingers` to 1 when only A0 is connected.
 Do not enable inputs that are floating.
 
-The packet already contains five command slots, but the receiver currently uses
-only bit 0 and angle 0. Multi-servo actuation requires a deliberate receiver
-extension, per-servo travel calibration, supply sizing and new behavior tests.
-It is not enabled merely by changing `kActiveFingers`.
+### Connect all five receiver servos
+
+The receiver now handles all five packet channels automatically. Follow the
+[five-servo power and signal diagram](hardware/README.md#five-servo-receiver-and-power):
+index/channel 0 → D2, middle/1 → D3, ring/2 → D4, little/3 → D5, thumb/4 → D6.
+The mapping is a suggested anatomical assignment; packet indices and pins are
+fixed by the configuration, not by how the glove is worn.
+
+1. Disconnect power. Replace the one-servo power arrangement with an appropriately
+   sized external supply and fused distributor/harness before adding motors.
+   The reference five-SG90 planning budget is regulated 4.8 V nominal / 12 A;
+   verify actual demand and wire/connector ratings as explained in the power guide.
+2. Route each servo's V+ and GND directly to that distributor. Connect receiver
+   GND separately to supply negative. Do not connect motor V+ to Uno 5V/VIN or
+   route servo current through breadboard rails. Keep radio VCC on Uno 3.3V.
+3. With horns/linkages unloaded, connect one servo signal at a time to D2–D6.
+   For each `{pin,minUs,maxUs}` entry in `hardware::kServos`, tune a narrow usable
+   pulse range before fitting any mechanism. Defaults are 1000–2000 µs; command
+   10 maps to the minimum, 170 to the maximum, and 90 to the midpoint. These are
+   commands, not physical joint-angle measurements.
+4. Rebuild/upload `receiver` after changing its pulse settings. The receiver is
+   already five-channel capable and does not use `kActiveFingers` to limit its
+   outputs. That constant only controls sensor acquisition on the transmitter.
+5. Calibrate all five sensors. Verify each finger's channel, servo mapping and
+   travel independently, then simultaneous motion and supply voltage under load.
+6. Confirm that a missing calibration bit detaches only that channel, calibration
+   mask 0 detaches all, and transmitter power loss detaches all enabled outputs
+   once their 500 ms software threshold is reached. Resume with valid data and
+   verify recovery without an unintended initial pulse target.
+
+Malformed packets are ignored and cannot refresh deadlines. Clear validity bits
+and timeout both stop pulses for their channels; they do not switch motor power
+or guarantee torque release. RF ACKs still confirm receipt, not servo motion.
+Host tests and CI cover logic/build behavior, while every mechanical, waveform
+and supply check in this section needs actual bench validation.
 
 ## 10. Troubleshoot by stage
 

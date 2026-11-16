@@ -428,7 +428,7 @@
 <text x="48" y="1333" class="small" >This is a named-pin breakout, NOT the 2×4 header pin order.</text>
 <text x="48" y="1363" class="small" >Do not push a bare 2×4 radio header into common 5-hole strips.</text>
 <text x="48" y="1393" class="small" >3.3 V supply; direct Uno signals require Nordic VDD conditions.</text>
-<text x="870" y="880" class="heading" >3 / Receiver servo only</text>
+<text x="870" y="880" class="heading" >3 / One-servo bench subset</text>
 <text x="870" y="911" class="small" >Power return goes directly to the external supply.</text>
 <rect x="884" y="938" width="194" height="112" rx="12" fill="#137d89"/><rect x="1200" y="938" width="146" height="139" rx="12" fill="#526a92"/>
 <text x="902" y="969" class="small" style="fill:white">Receiver Uno</text>
@@ -442,7 +442,7 @@
 <rect x="884" y="1136" width="210" height="123" rx="12" fill="#fff1cf" stroke="#d4b774"/>
 <text x="899" y="1167" class="heading" >External supply</text>
 <text x="899" y="1198" class="small" >4.8 V regulated</text>
-<text x="899" y="1229" class="small" >2 A reference budget</text>
+<text x="899" y="1229" class="small" >2 A · one-servo subset</text>
 <text x="1070" y="1189" class="small" >+</text>
 <text x="1070" y="1241" class="small" >−</text>
 <path d="M1094 1184 H1174 V1031 H1200" class="wire" stroke="#d4513e" style="stroke-width:4" data-from="Supply.+" data-to="Servo.V+"/>

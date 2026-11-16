@@ -35,7 +35,7 @@
 <text x="630" y="397">Servo supply is separate from Uno power.</text>
 <text x="630" y="422">Route motor return directly to supply negative.</text>
 <text x="630" y="447">Do not join external V+ to Uno 5V / VIN.</text>
-<text x="615" y="505" class="small">Only finger 0 drives a servo in this firmware.</text>
+<text x="615" y="505" class="small">Single-servo subset shown; full receiver uses D2–D6.</text>
 <rect class="part" x="55" y="530" width="485" height="175" rx="6"/>
 <text x="70" y="557" class="heading">Uno ↔ nRF24L01+ (each node)</text>
 <text x="70" y="585">3.3V → VCC     GND → GND     IRQ: open</text>

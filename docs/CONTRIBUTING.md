@@ -9,13 +9,18 @@ behavior rather than copying sketches for each example:
 .github/workflows/       Hosted host and firmware checks
 firmware/
   transmitter/main.cpp   Uno acquisition, serial calibration and optional RF
-  receiver/main.cpp      RF commands and one-servo hardware adapter
+  receiver/main.cpp      RF commands and five-servo hardware adapter
 include/flex/
   core.hpp               Portable C++11 processing and protocol; no Arduino API
+  receiver.hpp           Five-channel command validity and timeout state
+  servo_output.hpp       Pulse limits and Servo-like output adapter
   hardware.hpp           Shared Uno pins, active channels and timing
   radio.hpp              Shared nRF24L01+ adapter settings
 examples/readings.cpp    Executable synthetic reading example using the core
 tests/core_test.cpp      Host behavior tests of the portable core
+tests/receiver_test.cpp  Five-channel state and pulse/output lifecycle tests
+tests/receiver_firmware_test.cpp  Actual receiver entry points with host doubles
+tests/support/          Explicit host Arduino/RF24/Servo substitutes
 docs/
   hardware/              Electrical reference, BOM, pinout and original circuit
   images/                Original conceptual illustrations embedded in guides
@@ -48,10 +53,8 @@ are ignored and are not project source.
    memory, indexing or arithmetic behavior:
 
    ```sh
-   c++ -std=c++11 -Wall -Wextra -Werror -pedantic -Iinclude \
-     -fsanitize=address,undefined -fno-omit-frame-pointer \
-     tests/core_test.cpp -o /tmp/flex-tests
-   /tmp/flex-tests
+   make test BUILD_DIR=build/sanitized \
+     CXXFLAGS="-std=c++11 -Wall -Wextra -Werror -pedantic -Iinclude -fsanitize=address,undefined -fno-omit-frame-pointer"
    ```
 
 5. Activate the project's virtual environment and run `pio run` for all three

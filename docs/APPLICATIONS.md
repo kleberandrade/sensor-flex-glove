@@ -1,7 +1,7 @@
 # Applications and extension paths
 
 This project provides calibrated flex readings, CSV telemetry and a wireless
-one-servo demonstration. The ideas below distinguish what you can run now from
+five-servo receiver (with a one-sensor quick start). The ideas below distinguish what you can run now from
 additional systems you would need to build. None of these applications has been
 physically validated by the modernization work.
 
@@ -18,15 +18,15 @@ This needs no radio, servo or five-finger assembly.
 
 ## Demonstrate remote actuation
 
-**Available now:** one calibrated finger channel controls one receiver servo via
-nRF24L01+. Use an unloaded pointer or a low-force tabletop demonstrator after
-checking the actual servo's travel and supply.
+**Available now:** up to five calibrated finger channels independently control
+receiver servo signals on D2–D6 via nRF24L01+, with per-channel validity/timeout.
+Start with one unloaded pointer, then follow the five-servo power guide.
 
-**Extension:** a multi-finger robotic-hand prototype would need more servos,
-mechanical design, individual pulse/travel limits, an appropriately sized power
-system and receiver code/tests for all channels. The packet's five slots alone
-do not implement a five-servo hand. Evaluate communication loss and mechanical
-behavior on the complete assembly before operating it under load.
+**Extension:** a robotic-hand mechanism still needs mechanical design, individual
+pulse/travel tuning and a validated power/distribution system. Five electrical
+outputs do not establish the safety or accuracy of a complete robotic hand.
+Evaluate communication loss and mechanical behavior on the assembled system
+before operating it under load.
 
 ## Capture datasets for gesture experiments
 
@@ -68,6 +68,6 @@ It reports a control signal rather than a diagnostic angle or clinical metric.
 ## Choose a practical starting point
 
 Start with the [single-sensor build guide](BUILD_GUIDE.md). Use the reader for
-teaching, logging and host interaction; add radio and one servo for remote
-actuation. Keep calibration quality, mounting repeatability, latency and loss
+teaching, logging and host interaction; start remote actuation with one servo
+and expand to five after the power and travel checks. Keep calibration quality, mounting repeatability, latency and loss
 behavior as explicit evaluation questions for every new application.

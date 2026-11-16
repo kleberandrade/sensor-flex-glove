@@ -674,6 +674,6 @@
 <text x="48" y="1142" class="small" >• Each flex strip is a passive 10 kΩ nominal reference part. Each fixed resistor is a separate 10 kΩ / 1% part.</text>
 <text x="48" y="1175" class="small" >• a–e holes on one row share a strip. f–j are isolated across the gap. Shown section: rows 1–33 of a suitable board.</text>
 <text x="48" y="1208" class="small" >• Connect every divider, then set kActiveFingers = 5, rebuild and recalibrate all fingers for the five-second session.</text>
-<text x="48" y="1241" class="small" >• Radios still use Uno 3.3V separately. This change adds sensing channels; the supplied receiver drives only finger 0.</text>
+<text x="48" y="1241" class="small" >• Radios still use Uno 3.3V separately. Receiver maps CH0–4 to D2–D6; follow the five-servo power guide.</text>
 <text x="35" y="1300" class="tiny" >Original SVG · MIT · Reference assembly, not a physical test. See the hardware guide for the full hole table and rail-continuity checks.</text>
 </svg>

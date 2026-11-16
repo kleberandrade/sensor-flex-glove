@@ -28,7 +28,12 @@ Quantities are for the default one-sensor wireless demonstration.
 
 For the standalone `reader`, omit the second Uno, both radios, servo and servo
 supply. For five sensors, add four identical sensor/resistor dividers and set
-`kActiveFingers=5`. The included receiver still drives only finger 0.
+`kActiveFingers=5`. The receiver supports all five outputs; only valid transmitted channels attach.
+
+For five-finger actuation, also add four servos (five total), a suitably sized
+external supply and fused distribution harness/block. The one-servo 2 A supply
+row above is for the initial unloaded single-channel reference only; use the
+five-servo calculation below for the full setup.
 
 ## Circuit and pinout
 
@@ -52,7 +57,11 @@ check the orientation of the module in hand rather than assuming a header order.
 | Both nodes | D12 | Radio MISO | Radio output → Uno SPI input |
 | Both nodes | D13 | Radio SCK | Uno SPI output → radio input |
 | Both nodes | — | Radio IRQ | Unconnected; firmware polls |
-| Receiver | D2 | Servo signal | Servo control pulses |
+| Receiver | D2 | Servo 0 / index signal | Channel 0 command pulses |
+| Receiver | D3 | Servo 1 / middle signal | Channel 1 command pulses |
+| Receiver | D4 | Servo 2 / ring signal | Channel 2 command pulses |
+| Receiver | D5 | Servo 3 / little signal | Channel 3 command pulses |
+| Receiver | D6 | Servo 4 / thumb signal | Channel 4 command pulses |
 | Receiver | GND | Servo GND + external supply negative | Common return, route motor current directly to supply |
 | Receiver | — | External supply positive → servo V+ | Regulated 4.8 V; do not join to Uno 5V/VIN |
 
@@ -154,7 +163,7 @@ the module with short leads. If C2 is polarized, its positive lead goes to VCC
 and its negative lead to GND. Verify its polarity markings rather than relying
 on lead length. Leave IRQ disconnected. The electrical limits below still apply.
 
-### Add the receiver servo and check before powering
+### Single-channel receiver bench check
 
 The lower-right panel identifies D2, servo signal/V+/GND and the external supply
 terminals. Route servo power and return directly to its rated external supply,
@@ -167,6 +176,69 @@ Before powering, check row connections and rail continuity, confirm that 5 V and
 GND are not shorted, and verify the actual radio pin labels and capacitor polarity.
 Test the single-sensor reader first, then the radios without the servo load,
 then an unloaded servo as described in the [build guide](../BUILD_GUIDE.md).
+
+## Five-servo receiver and power
+
+![Five independent servo signals and fused external power/ground distribution](../images/five-servo-receiver.svg)
+
+[Open the full-size five-servo wiring SVG](../images/five-servo-receiver.svg).
+D2–D6 correspond to channels 0–4, using the suggested index/middle/ring/little/thumb
+mapping. These pins avoid the radio's CE=D7, CSN=D8 and SPI D11–D13. The pinned
+[Servo AVR implementation](https://github.com/arduino-libraries/Servo/blob/1.3.0/src/avr/Servo.cpp)
+supports the five outputs using Timer1; normal `analogWrite` PWM on D9/D10 is
+unavailable while the library controls that timer. Servo signal pins do not need
+to be hardware PWM pins.
+
+### Supply budget and distribution
+
+For the reference SG90, [TowerPro](https://towerpro.com.tw/product/sg90-7/)
+lists 4.8 V operation and gives upper current guidance of 2 A per servo in its
+manufacturer response. A **planning calculation** for five is 5 × 2 A = 10 A;
+20% additional headroom gives **12 A at regulated 4.8 V nominal**. This is not a
+measured five-servo load or a formal universal stall-current rating. Verify the
+actual servo specifications, combined startup/stall behavior and supply voltage
+under load; resize for your parts and mechanism. Use another voltage only when
+the actual servo datasheets permit it.
+
+1. Power the receiver Uno independently by USB as in the existing reference.
+2. Run servo-supply positive through appropriately selected protection to a
+   power distributor, then a separate positive branch to each servo V+.
+3. Return each servo GND directly to the distributor/supply negative, rather
+   than daisy-chaining its motor current through the Uno, radio or breadboard.
+4. Connect receiver GND to that same negative/common return with its own link.
+5. Leave external supply positive isolated from Uno 5V/VIN and radio VCC. The
+   radio retains its local Uno 3.3 V supply and bypass capacitors.
+
+Use wiring, terminals and connectors rated for the actual branch and total
+currents. Select the main fuse/protection against wire/connector capacity and
+startup behavior; the generic F1 symbol is not a prescribed fuse rating. Add
+appropriate branch protection for the chosen harness. No fixed wire gauge, fuse
+rating or bulk capacitor value can be guaranteed without the actual assembly
+and load. Do not use solderless breadboard power strips for motor distribution.
+
+### Pulse calibration and staged verification
+
+`hardware::kServos` in `include/flex/hardware.hpp` holds five `{pin,minUs,maxUs}`
+entries. Defaults are D2–D6 with 1000–2000 µs pulse endpoints. Commands 10 and 170
+map to those endpoints, and 90 maps to the midpoint. Endpoints are clamped and
+validated against the library's 544–2400 µs absolute software range, but that
+range is not a physical safety rating. Narrow and tune each channel unloaded
+before connecting its horn/linkage; recalibrate after changing a mechanism.
+
+All outputs boot detached. A valid frame's mask independently enables each
+channel; clear bits detach those outputs on the next synchronization. Invalid
+frames do not update command state or freshness. An enabled channel detaches
+when its last valid command is at least 500 ms old; valid data can reattach it.
+Servo pulse targets are set before enabling output, including recovery. Detach
+stops pulses; it does not remove power or guarantee that a servo releases torque.
+
+Start with one unloaded D2 servo and the single-sensor transmitter default. For
+all five, first validate the five-sensor reader, set `kActiveFingers=5`, flash the
+transmitter, then connect and calibrate one unloaded servo at a time. Check the
+mapping, endpoint travel and current draw. Finally verify simultaneous movement,
+partial invalidity, full calibration, transmitter power loss and recovery while
+watching supply stability. These are required bench checks, not tests already
+performed by this repository's software CI.
 
 ## Electrical rationale and constraints
 
@@ -203,9 +275,11 @@ unidentified clones or regulated adapter boards.
 specifies 4.8 V operation and an external adapter; its manufacturer response
 indicates current can reach 2 A. The supply budget above follows that reference,
 but actual stall current and travel need validation on the actual servo.
-The library's default pulse range (544–2400 µs) may exceed a particular servo's
-mechanical range even when software angles are limited to 10–170. Adjust the
-`Servo::attach` pulse limits for that unit before coupling a mechanism.
+The receiver now narrows command pulses to per-servo 1000–2000 µs endpoints by
+default. Even these endpoints can exceed a particular unit's mechanical travel;
+adjust the corresponding `hardware::kServos` entry before coupling a mechanism.
+The single-channel supply budget does not apply to five servos; use the full
+supply/distribution section above.
 
 ## Bench validation still required
 
