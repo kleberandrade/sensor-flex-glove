@@ -1,0 +1,7 @@
+.venv/
+.pio/
+.platformio/
+build/
+.metrics/
+__pycache__/
+.DS_Store
