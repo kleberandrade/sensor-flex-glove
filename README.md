@@ -54,6 +54,29 @@ Open the image at full size and follow the [hole-by-hole connection table](docs/
 for the rails, occupied holes, capacitor polarity and pre-power checks. Uno and
 radio terminals are named breakouts, not a claim about physical header order.
 
+### Five sensors: one for each finger
+
+![Five independent flex dividers on a numbered breadboard, connected to Uno A0 through A4](docs/images/five-sensor-breadboard.svg)
+
+Suggested mapping: **index → A0, middle → A1, ring → A2, little → A3,
+thumb → A4**. Each sensor needs its **own 10 kΩ fixed resistor**; only 5 V and
+GND are shared. The colored A0–A4 junctions must remain separate. This is an
+alternative layout: disconnect power and remove the single-sensor jumpers before
+moving to its new row positions. Use the [five-sensor hole table](docs/hardware/README.md#five-sensor-breadboard-layout)
+and [five-finger build steps](docs/BUILD_GUIDE.md#9-expand-to-multiple-fingers).
+
+After connecting all five dividers, edit `include/flex/hardware.hpp`:
+
+```cpp
+constexpr uint8_t kActiveFingers = 5;
+```
+
+Rebuild and upload `reader` or `transmitter`, then move **all five fingers** during
+the five-second calibration session. CSV channels 0–4 correspond to A0–A4.
+The repository default stays at one sensor so the initial quick start works;
+five sensors require the configuration change above. The supplied receiver
+still actuates only channel 0: five-channel sensing does not add five servos.
+
 ## Applications
 
 - Teach resistive sensing, ADC acquisition, calibration and the noise/latency trade-off.

@@ -52,3 +52,11 @@
 - Included named-pin wireless additions for each Uno, parallel local radio capacitors with polarity, and receiver servo wiring with an external supply/common-ground return. Kept servo current out of the breadboard. No unidentified 2×4 module header orientation is assumed.
 - Embedded the image in the README, hardware reference and staged build guide. Added the hole-by-hole table, strip/gap explanation, rail-continuity checks and the primary breadboard-vendor reference. Existing electrical limits and firmware pin assignments remain unchanged.
 - Validated Markdown links/anchors and SVG XML, compared all 19 labeled wiring endpoints with the documented circuit, and checked CE=D7, CSN=D8 and servo=D2 against the firmware configuration. Rendered and visually inspected the final image, including hole positions, resistor bands, capacitor/supply polarity and label legibility. This is documentation-only; physical continuity/electrical checks remain a builder responsibility.
+
+## Five-finger breadboard expansion (2026-11-16)
+
+- Added a separate original SVG for five independent sensor/resistor dividers and suggested index/middle/ring/little/thumb mapping to A0/A1/A2/A3/A4. Shared rails are explicit; ADC junctions remain separate.
+- Added a complete hole table and README/build steps for enabling `kActiveFingers=5`, rebuilding, observing CSV channels 0–4 and calibrating every finger. Warned that this is an alternative layout requiring removal of the earlier jumpers, since some row functions change.
+- Preserved the one-channel quick-start default and clarified that the receiver continues to actuate channel 0 only. No five-servo behavior or physical validation is claimed.
+- Validated all 32 labeled connections in the SVG and resolved breadboard strips to confirm that the five ADC junctions are distinct and not directly tied to either rail. Checked local Markdown links/anchors and SVG XML, then rendered/inspected the final diagram.
+- Built both `reader` and `transmitter` successfully for Uno with `kActiveFingers=5` in an isolated temporary project using the pinned libraries/toolchain. Removed that temporary project automatically; the tracked default remains 1 and no firmware source was changed. These are compilation and diagram checks, not a physical five-sensor test.

@@ -98,6 +98,46 @@ and row jumpers use a continuous section; bridge only confirmed breaks with
 same-net jumpers. Do not assume rail color means the board is already powered.
 See the breadboard manufacturer's [strip and rail explanation](https://learn.sparkfun.com/tutorials/how-to-use-a-breadboard/).
 
+### Five-sensor breadboard layout
+
+![Five sensors with separate ADC nodes on A0–A4 and shared supply rails](../images/five-sensor-breadboard.svg)
+
+[Open the full-size five-sensor SVG](../images/five-sensor-breadboard.svg).
+Use **five passive flex strips and five separate 10 kΩ, 1% fixed resistors** for
+the reference parts. This is a new layout, not an overlay on the one-sensor
+image. Disconnect all power and remove/reposition the earlier divider jumpers;
+for example, the former powered row 5 becomes A0's signal row here.
+
+Feed the positive rail from Uno **5V** beside row 1 and the negative rail from
+Uno **GND** beside row 2. For each channel, install all connections in its row:
+
+| Channel / suggested finger | 5 V jumper | Flex sensor leads | Fixed resistor leads | ADC jumper | GND jumper |
+| --- | --- | --- | --- | --- | --- |
+| 0 / index | + rail → a3 | e3–e5 | c5–c7 | Uno A0 → a5 | a7 → − rail |
+| 1 / middle | + rail → a9 | e9–e11 | c11–c13 | Uno A1 → a11 | a13 → − rail |
+| 2 / ring | + rail → a15 | e15–e17 | c17–c19 | Uno A2 → a17 | a19 → − rail |
+| 3 / little | + rail → a21 | e21–e23 | c23–c25 | Uno A3 → a23 | a25 → − rail |
+| 4 / thumb | + rail → a27 | e27–e29 | c29–c31 | Uno A4 → a29 | a31 → − rail |
+
+Each row's a–e strip makes one local connection. Thus a5/c5/e5 are one A0
+junction, a11/c11/e11 one A1 junction, and so on. **Do not connect these five
+signal junctions together.** Only the supply and ground rails are common.
+The unused f–j strips are isolated across the gap; wire passing over them is
+insulated and is not plugged into those holes. Dots mark wire endpoints.
+The finger assignment is a documented example, not a firmware anatomical model.
+
+Use a board with at least 33 accessible numbered rows as illustrated (a larger
+board is fine). Check rail continuity across the whole used section: a rail
+break can leave later sensors unpowered. Bridge only matching supply segments
+or matching ground segments after verifying continuity. Keep radio VCC on Uno
+3.3V separately, and keep servo motor power off these rails.
+
+With power still disconnected, verify that the A0–A4 strips are not directly
+shorted to either rail or to each other. After connecting all dividers, enable
+five channels and follow the [build/calibration procedure](../BUILD_GUIDE.md#9-expand-to-multiple-fingers).
+The software validates each channel's calibration independently; a wiring fault
+can still resemble an electrical reading and must be checked physically.
+
 ### Add radios by pin name
 
 The lower-left panel applies independently to the transmitter and receiver.

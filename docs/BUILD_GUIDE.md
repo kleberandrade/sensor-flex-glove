@@ -201,15 +201,50 @@ Do not infer radio range, reaction time or mechanical accuracy from host tests.
 
 ## 9. Expand to multiple fingers
 
-Each additional channel needs a separate flex sensor and divider. An example
-assignment is index=A0, middle=A1, ring=A2, little=A3, thumb=A4. This is a suggested
-mapping; document your actual assignment.
+![Five-sensor breadboard assembly and finger-to-ADC assignment](images/five-sensor-breadboard.svg)
 
-Set `kActiveFingers` in `include/flex/hardware.hpp` to the number of connected
-**consecutive** inputs, from 1 to 5. For example, 3 enables A0, A1 and A2; the
-configuration cannot select only A0 and A4. Rebuild and upload the transmitter
-or reader, then move every enabled finger during calibration. A bad channel's
-validity bit stays clear independently of the others.
+This optional layout uses five sensor/resistor pairs. Suggested assignment:
+**index=A0, middle=A1, ring=A2, little=A3, thumb=A4**. Document the assignment if
+your glove uses a different one. Follow the [complete hole table](hardware/README.md#five-sensor-breadboard-layout)
+for the shared rails, each flex sensor, fixed resistor and ADC jumper.
+
+1. Disconnect USB and every external supply. This five-channel image uses new
+   row positions, so remove/reposition the earlier single-sensor jumpers first.
+2. Assemble five independent dividers. Use rows 5, 11, 17, 23 and 29 as the ADC
+   junctions for A0, A1, A2, A3 and A4 respectively. Every branch has its own
+   fixed resistor; no two ADC junctions are joined directly.
+3. Verify rail continuity over the used rows and check each divider against the
+   table. Check for direct shorts from signal junctions to either rail before
+   reconnecting power. The radio still uses 3.3V, never the divider's 5 V rail.
+4. Set the existing declaration in `include/flex/hardware.hpp` to:
+
+   ```cpp
+   constexpr uint8_t kActiveFingers = 5;
+   ```
+
+5. Rebuild and upload the reader first; substitute your actual port:
+
+   ```sh
+   pio run -e reader
+   pio run -e reader -t upload --upload-port /dev/cu.usbmodemREADER
+   pio device monitor -p /dev/cu.usbmodemREADER -b 115200
+   ```
+
+6. During the five-second startup session, move **all five fingers** through their
+   intended comfortable range. Send `c` and repeat if any channel's filtered
+   travel was less than 20 counts. Calibration is independent for each channel.
+7. Verify CSV rows for channels **0, 1, 2, 3 and 4** (A0–A4). Move one finger at
+   a time and check that its assigned channel changes and reports `valid=1` after
+   calibration. Record drift/coupling rather than assuming mechanically isolated
+   movement. These observations require the actual assembled glove.
+8. For wireless operation, build/upload `transmitter` with the same five-channel
+   configuration after reader checks pass. Its packet will carry five command
+   slots and a per-channel validity mask. The receiver code remains unchanged.
+
+The repository defaults to one sensor for the single-channel quick start. Values
+from 1 to 5 enable that many **consecutive** inputs; for example, 3 enables A0–A2,
+not A0 and A4 alone. Return `kActiveFingers` to 1 when only A0 is connected.
+Do not enable inputs that are floating.
 
 The packet already contains five command slots, but the receiver currently uses
 only bit 0 and angle 0. Multi-servo actuation requires a deliberate receiver
