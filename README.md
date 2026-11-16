@@ -1,6 +1,6 @@
 # Flex Sensor Glove
 
-[![CI](https://github.com/kleberandrade/sensor-flex-groove/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/kleberandrade/sensor-flex-groove/actions/workflows/ci.yml)
+[![CI](https://github.com/kleberandrade/sensor-flex-glove/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/kleberandrade/sensor-flex-glove/actions/workflows/ci.yml)
 ![C++11](https://img.shields.io/badge/C%2B%2B-11-blue)
 ![Arduino Uno R3](https://img.shields.io/badge/Arduino-Uno_R3-00979D)
 ![PlatformIO](https://img.shields.io/badge/PlatformIO-6.2.0-orange)
@@ -10,9 +10,9 @@ Read resistive flex sensors on an Arduino Uno R3, calibrate and smooth their
 readings, and send bounded servo commands to another Uno over nRF24L01+ radio.
 A standalone serial reader works without a radio or receiver.
 
-The repository name is historical: the original sketches describe a **glove**,
-not an identified Grove sensor module. They do not record the original board,
-sensor part number, wiring or mechanical assembly. The documented circuit is an
+The project is a **glove** that reads finger bending with resistive flex sensors.
+The original sketches do not identify a Grove sensor module. They do not record
+the original board, sensor part number, wiring or mechanical assembly. The documented circuit is an
 explicit reference design for discrete resistive sensors, not a reconstruction
 of unrecorded hardware. Do not apply it to an unknown Grove module without its
 part-specific datasheet.
@@ -32,6 +32,16 @@ start with one divider and USB readings, mount the strip, calibrate, then add th
 radio and unloaded servo. The guide explains CSV fields, capture, five-channel
 expansion and troubleshooting. Review the [electrical BOM and pinout](docs/hardware/README.md)
 before wiring.
+
+## Electronics at a glance
+
+![Electronics only: flex divider, two Arduino Uno boards, nRF24L01+ radios and an externally powered servo](docs/images/electronics-overview.svg)
+
+This separate component illustration shows the **electronics without the glove**:
+the A0 sensor divider, the two Uno/radio nodes, and the receiver's servo with its
+own power supply. It is an original reference illustration, not a photograph of
+an assembled prototype. Follow the [detailed circuit and electrical pinout](docs/hardware/README.md#circuit-and-pinout)
+for actual connections, voltage constraints and component selection.
 
 ## Applications
 
@@ -59,8 +69,8 @@ for what is available now and what each idea needs.
 ## Install and build
 
 ```sh
-git clone https://github.com/kleberandrade/sensor-flex-groove.git
-cd sensor-flex-groove
+git clone https://github.com/kleberandrade/sensor-flex-glove.git
+cd sensor-flex-glove
 python3 -m venv .venv
 . .venv/bin/activate
 python -m pip install -r requirements-dev.txt

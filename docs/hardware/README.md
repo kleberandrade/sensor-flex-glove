@@ -32,6 +32,8 @@ supply. For five sensors, add four identical sensor/resistor dividers and set
 
 ## Circuit and pinout
 
+![Electronics-only component overview](../images/electronics-overview.svg)
+
 [Open original SVG circuit](circuit.svg). This is a labeled electrical reference,
 not a PCB manufacturing file. Connections are identified by module pin names;
 check the orientation of the module in hand rather than assuming a header order.

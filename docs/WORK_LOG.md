@@ -36,4 +36,12 @@
 - Reviewed folder responsibilities and retained the existing firmware/include/tests/examples split. Added `docs/images` for conceptual illustrations and a contribution guide that documents the full tree and shared reader source, avoiding copied sketches or disruptive directory churn.
 - Documented educational sensing, remote actuation, gesture datasets, game/music controls and wearable interaction applications, explicitly distinguishing existing demonstrations from extensions requiring implementation and validation.
 - Host tests/example and local Markdown link/SVG XML checks pass. Rendered the glove illustration in an isolated headless Chrome profile and inspected placement, labels and data cards.
-- Hosted CI passed both jobs after the cache-path fix: https://github.com/kleberandrade/sensor-flex-groove/actions/runs/43799681424 (`fa16a26`). The documentation update is also followed through CI after publication.
+- Hosted CI passed both jobs after the cache-path fix: https://github.com/kleberandrade/sensor-flex-glove/actions/runs/43799681424 (`fa16a26`). The documentation update is also followed through CI after publication.
+
+## Repository naming and electronics illustration (2026-11-16)
+
+- Renamed the GitHub repository to `sensor-flex-glove` at the user's request; preserved repository history, About text and default branch `main`. Updated the origin, clone command, CI badge and all repository URLs, including links to earlier workflow runs.
+- Added a separate, original electronics-only SVG illustration to the README and hardware guide: discrete A0 divider, two Uno/nRF24L01+ nodes, decoupling and an independently powered receiver servo. The artwork is explicitly a reference illustration rather than a photograph or PCB layout.
+- Retained the detailed circuit and its electrical constraints as the wiring source of truth. No firmware behavior or hardware specification changed.
+- Aligned the local checkout directory with the new repository name and recreated only the task-created Python virtual environment, preventing stale executable paths after the directory move. Verified documentation links/anchors, renamed URLs and SVG XML; rendered and inspected the electronics illustration.
+- After relocating the checkout, `make test example`, `pip check` and all three real Uno builds passed with the pinned environment. No tracked source/documentation retains the previous repository name.
