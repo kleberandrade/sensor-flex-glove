@@ -26,3 +26,5 @@
 - Verified that the remote has only the unprotected `master` at `7e0747e`, that no `main` exists, and that the authenticated account can administer this repository.
 - Updated the workflow push trigger and README badge to `main`; historical entries above retain the branch names and validation state at the time of their execution.
 - Publication uses GitHub's branch rename operation followed by a normal fast-forward push, preserving history without a force push. The active chat follows the hosted CI to completion and handles any failures.
+
+- The first hosted run passed host tests/sanitizers but failed in setup-python before compilation: its pip cache searched default dependency filenames and did not find `requirements-dev.txt`. Set `cache-dependency-path` explicitly to the existing lock file; no firmware workaround or cache removal is needed.
