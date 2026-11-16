@@ -52,7 +52,7 @@ void legacyRecord(EEPROMClass& storage,const flex::ServoSettings* profile,uint32
   using namespace flex::calibration_storage;
   uint8_t bytes[kSlotSize];encodeRecord(profile,generation,bytes);
   bytes[3]=1;bytes[4]=5;write16(bytes+29,crc16(bytes+1,28));
-  for(uint8_t i=0;i<kSlotSize;++i) storage.bytes[i]=bytes[i];
+  for(uint8_t i=0;i<kLegacySlotSize;++i) storage.bytes[i]=bytes[i];
 }
 bool equalProfile(const flex::ServoSettings* a,const flex::ServoSettings* b) {
   for(uint8_t i=0;i<5;++i)
@@ -67,7 +67,7 @@ void persistence_and_migration() {
   for(uint8_t mask=0;mask<32;++mask) {
     flex::ServoSettings combination[5];std::memcpy(combination,normal,sizeof combination);
     for(uint8_t i=0;i<5;++i) combination[i].reversed=bool((mask>>i)&1);
-    EEPROMClass bits;assert(save(bits,combination) && bits.bytes[4]==mask);
+    EEPROMClass bits;assert(save(bits,combination) && bits.bytes[kBaseAddress+4]==mask);
     flex::ServoSettings roundtrip[5];std::memcpy(roundtrip,normal,sizeof roundtrip);
     assert(load(bits,roundtrip) && equalProfile(roundtrip,combination));
   }
@@ -80,10 +80,10 @@ void persistence_and_migration() {
   EEPROMClass legacy;legacyRecord(legacy,normal);
   std::memcpy(loaded,profile,sizeof loaded);
   assert(load(legacy,loaded) && equalProfile(loaded,normal) && legacy.writes==0);
-  assert(save(legacy,normal)); // explicit save upgrades v1, even with identical limits
-  assert(legacy.bytes[kSlotSize+3]==2);
+  assert(save(legacy,normal)); // explicit save upgrades legacy, even with identical limits
+  assert(legacy.bytes[kBaseAddress+3]==kSchema);
   int migratedWrites=legacy.writes;assert(save(legacy,normal) && legacy.writes==migratedWrites);
-  for(int budget=0;budget<36;++budget) {
+  for(int budget=0;budget<kSlotSize+5;++budget) {
     EEPROMClass interrupted;legacyRecord(interrupted,normal);interrupted.allowed=budget;
     try {save(interrupted,profile);} catch(const PowerLoss&) {}
     assert(load(interrupted,loaded));
@@ -91,7 +91,7 @@ void persistence_and_migration() {
   }
   // Interrupted writes in the new schema must keep orientation and limits coherent.
   EEPROMClass baseline;assert(save(baseline,normal));
-  for(int budget=0;budget<36;++budget) {
+  for(int budget=0;budget<kSlotSize+5;++budget) {
     EEPROMClass interrupted=baseline;interrupted.allowed=budget;
     try {save(interrupted,profile);} catch(const PowerLoss&) {}
     assert(load(interrupted,loaded));
@@ -103,19 +103,19 @@ void persistence_and_migration() {
   oldProfile[4].minUs=1160;oldProfile[4].maxUs=1840;
   EEPROMClass legacyBoth;legacyRecord(legacyBoth,normal,7);
   EEPROMClass secondSlot;legacyRecord(secondSlot,oldProfile,8);
-  for(uint8_t i=0;i<kSlotSize;++i) legacyBoth.bytes[kSlotSize+i]=secondSlot.bytes[i];
+  for(uint8_t i=0;i<kLegacySlotSize;++i) legacyBoth.bytes[kLegacySlotSize+i]=secondSlot.bytes[i];
   assert(load(legacyBoth,loaded) && equalProfile(loaded,oldProfile));
-  for(int budget=0;budget<36;++budget) {
+  for(int budget=0;budget<kSlotSize+5;++budget) {
     EEPROMClass interrupted=legacyBoth;interrupted.allowed=budget;
     try {save(interrupted,profile);} catch(const PowerLoss&) {}
     assert(load(interrupted,loaded));
     assert(equalProfile(loaded,oldProfile) || equalProfile(loaded,profile));
   }
   EEPROMClass invalid;uint8_t bytes[kSlotSize];encodeRecord(profile,10,bytes);
-  bytes[4]|=0x20;write16(bytes+29,crc16(bytes+1,28)); // CRC-valid reserved direction bit
-  for(uint8_t i=0;i<kSlotSize;++i) invalid.bytes[i]=bytes[i];
+  bytes[4]|=0x20;write16(bytes+kSlotSize-2,crc16(bytes+1,kSlotSize-3)); // CRC-valid reserved direction bit
+  for(uint8_t i=0;i<kSlotSize;++i) invalid.bytes[kBaseAddress+i]=bytes[i];
   assert(!load(invalid,loaded));
-  legacy.bytes[kSlotSize+4]^=1; // corrupt newest direction mask without updating CRC
+  legacy.bytes[kBaseAddress+4]^=1; // corrupt newest direction mask without updating CRC
   assert(load(legacy,loaded) && equalProfile(loaded,normal));
   for(size_t i=kStorageBytes;i<legacy.bytes.size();++i) assert(legacy.bytes[i]==0xff);
 }

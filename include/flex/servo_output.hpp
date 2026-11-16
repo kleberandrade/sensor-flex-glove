@@ -2,18 +2,20 @@
 #define FLEX_SERVO_OUTPUT_HPP
 #include "receiver.hpp"
 namespace flex {
+constexpr uint16_t kMaxServoSpeed=10000;
 struct ServoSettings {
   uint8_t pin;
   uint16_t minUs;
   uint16_t maxUs;
   bool reversed;
+  uint16_t speedUsPerSecond;
   constexpr ServoSettings(uint8_t outputPin=0,uint16_t minimum=1000,
-                          uint16_t maximum=2000,bool reverse=false)
-      :pin(outputPin),minUs(minimum),maxUs(maximum),reversed(reverse) {}
+                          uint16_t maximum=2000,bool reverse=false,uint16_t speed=0)
+      :pin(outputPin),minUs(minimum),maxUs(maximum),reversed(reverse),speedUsPerSecond(speed) {}
 };
 constexpr bool validServoSettings(ServoSettings settings) {
   return settings.minUs >= 544 && settings.maxUs <= 2400 &&
-         settings.minUs < settings.maxUs;
+         settings.minUs < settings.maxUs && settings.speedUsPerSecond<=kMaxServoSpeed;
 }
 // Settings must be validated before use. Commands 10..170 span these pulse limits.
 inline uint16_t pulseFor(uint8_t angle, ServoSettings settings) {
@@ -24,6 +26,12 @@ inline uint16_t pulseFor(uint8_t angle, ServoSettings settings) {
          (settings.maxUs - settings.minUs) / 160;
 }
 
+inline uint16_t clampPulse(uint16_t pulse,ServoSettings settings) {
+  if(pulse<settings.minUs) return settings.minUs;
+  if(pulse>settings.maxUs) return settings.maxUs;
+  return pulse;
+}
+
 template <typename ServoType>
 void applyPulse(ServoType& servo, bool enabled, uint16_t pulse, ServoSettings settings) {
   if (!enabled) {
@@ -31,9 +39,7 @@ void applyPulse(ServoType& servo, bool enabled, uint16_t pulse, ServoSettings se
     return;
   }
   // Prime before enabling pulses, including reattachment after a timeout.
-  if (pulse < settings.minUs) pulse = settings.minUs;
-  if (pulse > settings.maxUs) pulse = settings.maxUs;
-  servo.writeMicroseconds(pulse);
+  servo.writeMicroseconds(clampPulse(pulse,settings));
   // Default library bounds avoid its AVR int8_t custom-attach offset limits.
   // Our own per-servo pulse limits are applied explicitly above.
   if (!servo.attached()) servo.attach(settings.pin);

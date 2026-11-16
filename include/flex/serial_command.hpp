@@ -3,7 +3,7 @@
 #include "servo_output.hpp"
 #include <string.h>
 namespace flex {
-enum class CommandKind {None,Invalid,Help,Show,Calibrate,Set,Test,Invert,Stop,Save,Load,Defaults,Run};
+enum class CommandKind {None,Invalid,Help,Show,Calibrate,Set,Test,Invert,Speed,Stop,Save,Load,Defaults,Run};
 struct SerialCommand {
   CommandKind kind=CommandKind::None;
   uint8_t channel=0;
@@ -42,6 +42,7 @@ inline CommandKind numericKind(const char* name,uint8_t count) {
   if(count!=3) return CommandKind::Invalid;
   if(!strcmp(name,"test")) return CommandKind::Test;
   if(!strcmp(name,"invert")) return CommandKind::Invert;
+  if(!strcmp(name,"speed")) return CommandKind::Speed;
   return CommandKind::Invalid;
 }
 inline bool validNumericArguments(char** tokens,SerialCommand& command) {
@@ -51,6 +52,7 @@ inline bool validNumericArguments(char** tokens,SerialCommand& command) {
              validServoSettings({0,command.first,command.second});
     case CommandKind::Test:return command.first>=544 && command.first<=2400;
     case CommandKind::Invert:return command.first<=1;
+    case CommandKind::Speed:return command.first<=kMaxServoSpeed;
     default:return false;
   }
 }

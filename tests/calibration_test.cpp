@@ -91,7 +91,7 @@ void storage() {
   assert(loaded[4].minUs==1100 && loaded[4].pin==6 && loaded[0].minUs==1000);
   // Cut before every possible changed-byte write; reboot must recover old or new.
   EEPROMClass baseline;assert(save(baseline,defaults));
-  for(int budget=0;budget<36;++budget) {
+  for(int budget=0;budget<kSlotSize+5;++budget) {
     EEPROMClass interrupted=baseline;interrupted.allowed=budget;
     try {save(interrupted,changed);} catch(const PowerLoss&) {}
     assert(load(interrupted,loaded));
@@ -99,10 +99,10 @@ void storage() {
     assert(loaded[4].maxUs==(loaded[4].minUs==1000?2000:1900));
   }
   // Damage the newer record: fall back to the older intact one.
-  memory.bytes[kSlotSize+10]^=1;
+  memory.bytes[kBaseAddress+kSlotSize+10]^=1;
   assert(load(memory,loaded) && loaded[4].minUs==1000);
   EEPROMClass corrupt;
-  assert(save(corrupt,changed));corrupt.bytes[3]=99;
+  assert(save(corrupt,changed));corrupt.bytes[kBaseAddress+3]=99;
   assert(!load(corrupt,loaded));
   EEPROMClass shortMemory;shortMemory.capacity=kStorageBytes-1;
   assert(!save(shortMemory,defaults) && !load(shortMemory,loaded));
@@ -112,7 +112,7 @@ void storage() {
   flex::ServoSettings unique[5];std::memcpy(unique,defaults,sizeof unique);
   for(uint8_t i=0;i<5;++i) {unique[i].minUs=1000+50*i;unique[i].maxUs=2000-50*i;}
   assert(save(baseline,changed));
-  for(int budget=0;budget<36;++budget) {
+  for(int budget=0;budget<kSlotSize+5;++budget) {
     EEPROMClass interrupted=baseline;interrupted.allowed=budget;
     try {save(interrupted,unique);} catch(const PowerLoss&) {}
     assert(load(interrupted,loaded));
@@ -125,14 +125,14 @@ void storage() {
   }
   EEPROMClass wrapped;
   uint8_t record[kSlotSize];encodeRecord(defaults,0xffffffffUL,record);
-  for(uint8_t i=0;i<kSlotSize;++i) wrapped.bytes[i]=record[i];
+  for(uint8_t i=0;i<kSlotSize;++i) wrapped.bytes[kBaseAddress+i]=record[i];
   assert(save(wrapped,unique) && load(wrapped,loaded));
   for(uint8_t i=0;i<5;++i) assert(loaded[i].minUs==unique[i].minUs);
   for(size_t i=kStorageBytes;i<wrapped.bytes.size();++i) assert(wrapped.bytes[i]==0xff);
   // A valid CRC cannot authorize invalid bounds or an unsupported schema.
-  encodeRecord(defaults,2,record);write16(record+9,2401);write16(record+29,crc16(record+1,28));
+  encodeRecord(defaults,2,record);write16(record+9,2401);write16(record+kSlotSize-2,crc16(record+1,kSlotSize-3));
   EEPROMClass invalidRecord;
-  for(uint8_t i=0;i<kSlotSize;++i) invalidRecord.bytes[i]=record[i];
+  for(uint8_t i=0;i<kSlotSize;++i) invalidRecord.bytes[kBaseAddress+i]=record[i];
   assert(!load(invalidRecord,loaded));
   changed[0].minUs=2401;writes=baseline.writes;
   assert(!save(baseline,changed) && baseline.writes==writes);

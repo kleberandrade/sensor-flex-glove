@@ -5,9 +5,9 @@
 #include <stdint.h>
 struct PowerLoss {};
 struct EEPROMClass {
-  std::array<uint8_t,128> bytes;
+  std::array<uint8_t,256> bytes;
   int writes=0,allowed=-1;
-  uint16_t capacity=128;
+  uint16_t capacity=256;
   bool readOnly=false;
   EEPROMClass() {bytes.fill(0xff);}
   uint16_t length() {return capacity;}
