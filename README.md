@@ -106,11 +106,43 @@ starting budget, not measured demand or a universal requirement; verify the
 actual servos, startup/stall load, wiring, connectors and protection. See the
 [source-backed power guide](docs/hardware/README.md#five-servo-receiver-and-power).
 
-Each `{pin, minUs, maxUs}` entry in `hardware::kServos` configures one output.
+Each `{pin, minUs, maxUs}` entry in `hardware::kServos` supplies firmware defaults.
+A valid saved receiver EEPROM profile overrides its pulse limits at boot.
 Commands 10–170 span **1000–2000 µs by default**, with independent limits for
 mechanical calibration. Check every servo unloaded before fitting a horn/linkage.
 These endpoints are not a guarantee of safe travel or physical degrees. Detach
 stops command pulses; it does not cut power or guarantee torque release.
+
+## Calibrate servo limits over serial
+
+Open the **receiver** monitor at 115200 baud with LF/CR/CRLF endings. Keep the
+transmitter off initially and the mechanism unloaded. Send `cal` and wait for
+acknowledgement: all outputs detach and RF actuation is paused. Example syntax
+(the trial numbers must be checked against your actual servo):
+
+```text
+cal
+show
+set 0 1400 1600
+test 0 1500
+stop
+save
+run
+```
+
+`set CH MIN_US MAX_US` edits one channel (0–4); `test CH US` previews only that
+servo for a 1000 ms software interval, within its configured limits. `save`
+explicitly stores the five-channel profile; reset reloads it from EEPROM.
+`load` discards RAM edits, `defaults` restores RAM defaults, and `help` lists
+commands. Defaults and edits are not persisted until `save`. `run` returns to
+fresh radio commands without saving. Valid limits satisfy
+`544 ≤ MIN_US < MAX_US ≤ 2400`; this is a software bound, not a safe-travel rating.
+
+The EEPROM format uses two versioned CRC-checked records with fallback to the
+last complete valid profile, or firmware defaults. Identical saves do not write.
+See the [complete serial calibration and EEPROM guide](docs/SERVO_CALIBRATION.md)
+for gradual endpoint tuning, recovery, reserved addresses and limitations.
+This is separate from transmitter ADC calibration with `c`, which stays in RAM.
 
 ## Applications
 
@@ -165,7 +197,8 @@ host checks. `pio run` builds `transmitter`, `receiver` and `reader` into
 4. Read CSV: `ms,channel,raw,filtered,angle,valid,ack`. Lines starting with `#`
    are status messages. `ack=-1` means radio-free mode.
 5. Send lowercase `c` over serial to recalibrate. Bounds stay fixed until then
-   or until reset; they are not stored in EEPROM.
+   or until reset; these **sensor ADC bounds** are not stored in EEPROM. Receiver
+   servo pulse limits use the separate serial/EEPROM workflow above.
 
 `valid=0` during calibration or if travel spans fewer than 20 ADC counts.
 The angle field remains 10 when invalid and must be ignored. A valid angle is a
@@ -221,7 +254,8 @@ only validated 10-bit ADC samples. `Calibration::observe/angle` reject samples
 outside 0–1023. Invalid calibration leaves the output argument unchanged.
 `receiver.hpp` owns validated command state and timeouts; `servo_output.hpp`
 maps/clamps commands to configured pulse limits and applies them to a Servo-like
-adapter. `hardware.hpp` validates the configured pulse limits at compile time.
+adapter. `hardware.hpp` validates default pulse limits at compile time; serial
+and EEPROM inputs are validated before replacing the runtime profile.
 
 ## Examples and tests
 
@@ -239,7 +273,9 @@ commands, partial/zero masks, malformed-frame rejection without deadline refresh
 exact timeout/rollover, recovery, pulse bounds and priming before attachment.
 A separate host test executes the actual receiver entry points with explicit
 RF/Arduino/Servo doubles; these do not simulate AVR timer or physical behavior.
-CI runs all three host test executables, sanitizers and all three firmware builds. The CI badge reports GitHub's
+Serial/EEPROM tests additionally cover bounded command parsing, per-servo editing,
+manual test expiry, radio suppression, profile reload and interrupted/corrupt
+saves. CI runs all four host test executables, sanitizers and all three firmware builds. The CI badge reports GitHub's
 actual workflow status; no hardware or coverage badge is claimed.
 
 See [validation and work log](docs/WORK_LOG.md) for commands and limitations.
@@ -283,6 +319,11 @@ fixed payload. These replace the old native-`int` struct, address and channel
 115 (2515 MHz). The plus radio variant is required for 250 kbps. Consult local
 radio rules for your deployment; channel choice alone does not establish
 regulatory compliance. The original 2017 firmware and protocol v1 are incompatible.
+
+The serial calibration upgrade adds EEPROM schema v1 independently of the RF
+format. An empty/invalid receiver EEPROM uses firmware defaults without writing;
+a saved profile takes precedence over source-code defaults. See the calibration
+guide before migrating existing actuator travel settings.
 
 ## License
 

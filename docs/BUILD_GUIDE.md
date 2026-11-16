@@ -192,8 +192,9 @@ is also treated as an initialization error.
    actual unit's requirements. Do not use the Uno's rail for servo power.
 4. Check polarity, supply voltage and pulse/travel limits before powering.
 5. Run the pair and observe the response without a person or mechanism in its
-   travel path. Default commands span 10–170; restrict the pulse limits in
-   `hardware::kServos` if the actual servo needs a narrower range.
+   travel path. Default commands span 10–170; use the receiver's
+   [serial calibration mode](SERVO_CALIBRATION.md) to tune/save its pulse limits
+   before coupling a mechanism. Source-code `kServos` entries are boot defaults.
 6. Remove transmitter power and verify receiver timeout handling. The firmware
    detaches each enabled output after 500 ms without its valid command.
    Recalibrating also sends invalid commands and detaches the servo while the session runs.
@@ -265,13 +266,17 @@ fixed by the configuration, not by how the glove is worn.
    GND separately to supply negative. Do not connect motor V+ to Uno 5V/VIN or
    route servo current through breadboard rails. Keep radio VCC on Uno 3.3V.
 3. With horns/linkages unloaded, connect one servo signal at a time to D2–D6.
-   For each `{pin,minUs,maxUs}` entry in `hardware::kServos`, tune a narrow usable
-   pulse range before fitting any mechanism. Defaults are 1000–2000 µs; command
-   10 maps to the minimum, 170 to the maximum, and 90 to the midpoint. These are
-   commands, not physical joint-angle measurements.
-4. Rebuild/upload `receiver` after changing its pulse settings. The receiver is
-   already five-channel capable and does not use `kActiveFingers` to limit its
-   outputs. That constant only controls sensor acquisition on the transmitter.
+   Enter `cal` on the receiver serial monitor and follow the
+   [individual calibration guide](SERVO_CALIBRATION.md): `set CH MIN_US MAX_US`,
+   `test CH US`, then explicit `save`. Start with a narrow verified range and
+   test one servo at a time before fitting a mechanism. Defaults are 1000–2000 µs;
+   command 10 maps to min, 170 to max, and 90 to the midpoint. These are commands,
+   not physical joint-angle measurements.
+4. Use `show` to verify all five settings and `run` to resume fresh RF commands.
+   No rebuild is needed for serial endpoint changes; EEPROM reloads them after
+   reset. The receiver is already five-channel capable and does not use
+   `kActiveFingers` to limit its outputs. That constant controls transmitter
+   sensor acquisition only.
 5. Calibrate all five sensors. Verify each finger's channel, servo mapping and
    travel independently, then simultaneous motion and supply voltage under load.
 6. Confirm that a missing calibration bit detaches only that channel, calibration
@@ -284,6 +289,18 @@ and timeout both stop pulses for their channels; they do not switch motor power
 or guarantee torque release. RF ACKs still confirm receipt, not servo motion.
 Host tests and CI cover logic/build behavior, while every mechanical, waveform
 and supply check in this section needs actual bench validation.
+
+## Receiver serial calibration checkpoint
+
+Connect to the receiver at 115200 baud; keep transmitter motion disabled until
+`cal` is acknowledged. `cal` and `stop` detach all outputs and pause RF actuation.
+A `test` command drives just the selected servo for up to a 1000 ms loop-checked
+interval; `save` detaches before writing EEPROM. `run` clears stale radio data
+and resumes only on fresh packets. Test every channel and verify saved values
+with `show` after a reset. Follow [SERVO_CALIBRATION.md](SERVO_CALIBRATION.md) for
+all commands, input limits, EEPROM recovery and a gradual unloaded workflow.
+Transmitter `c` still calibrates sensor ADC bounds in RAM; it does not set or save
+receiver pulse endpoints.
 
 ## 10. Troubleshoot by stage
 
@@ -298,7 +315,11 @@ and supply check in this section needs actual bench validation.
 | ACKs fail | Matching firmware settings, radio supply, SPI pin labels, plus variant | Test radios without the servo load |
 | Servo jitters or radio resets | External supply capacity and ground routing | Remove load, inspect rails and return path |
 | Motion is opposite to desired | Reference divider lowers ADC as bend increases | Adapt the command mapping and its tests for your mechanism |
-| Motion hits a stop | Servo-specific pulse limits and linkage travel | Disconnect the linkage and reduce pulse/travel limits |
+| Motion hits a stop | Servo-specific pulse limits and linkage travel | Disconnect the linkage; tune receiver endpoints in `cal` mode |
+| Serial edits are rejected | Wrong board/baud/line ending or RF mode active | Use the receiver at 115200, newline, then `cal` |
+| Limits revert after reset | RAM-only edit, save failure or invalid EEPROM | Check `show`, wait for `save` success, inspect load/fallback status |
+| Servo ignores the glove | Calibration mode still active | Finish/stop manual tests, then send `run` |
+| Manual servo test stops | The 1000 ms preview interval elapsed | Expected behavior; repeat a deliberate test or send `run` |
 
 ## Next steps
 

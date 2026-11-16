@@ -14,17 +14,22 @@ include/flex/
   core.hpp               Portable C++11 processing and protocol; no Arduino API
   receiver.hpp           Five-channel command validity and timeout state
   servo_output.hpp       Pulse limits and Servo-like output adapter
+  servo_calibration.hpp  Runtime endpoint profile and one-servo test session
+  serial_command.hpp     Bounded serial line reader and validated commands
+  calibration_storage.hpp  Versioned two-slot EEPROM journal and CRC
   hardware.hpp           Shared Uno pins, active channels and timing
   radio.hpp              Shared nRF24L01+ adapter settings
 examples/readings.cpp    Executable synthetic reading example using the core
 tests/core_test.cpp      Host behavior tests of the portable core
 tests/receiver_test.cpp  Five-channel state and pulse/output lifecycle tests
+tests/calibration_test.cpp  Parser/session/journal interruption and recovery tests
 tests/receiver_firmware_test.cpp  Actual receiver entry points with host doubles
-tests/support/          Explicit host Arduino/RF24/Servo substitutes
+tests/support/          Explicit host Arduino/RF24/Servo/EEPROM substitutes
 docs/
   hardware/              Electrical reference, BOM, pinout and original circuit
   images/                Original conceptual illustrations embedded in guides
   BUILD_GUIDE.md         Staged physical assembly and operation guide
+  SERVO_CALIBRATION.md   Serial command reference, workflow and EEPROM format
   APPLICATIONS.md        Current uses and explicitly scoped extensions
   CONTRIBUTING.md        This layout and development workflow
   THIRD_PARTY.md         Dependency licenses and distribution notes
@@ -69,4 +74,6 @@ The CI uses Ubuntu 24.04, Python 3.12 and pinned official Actions. Its jobs test
 host behavior/sanitizers and compile the three Uno targets. It cannot test
 physical electrical limits, RF range or a mechanism. Package updates should
 re-resolve the tooling lock file, preserve third-party licenses and pass the
-same checks before merging.
+same checks before merging. EEPROM schema changes also need byte-level migration/rejection
+tests, reserved-address documentation and interruption/recovery coverage. Keep
+serial processing bounded and detach manual outputs before EEPROM writes.

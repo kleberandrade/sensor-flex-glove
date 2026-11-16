@@ -219,7 +219,10 @@ and load. Do not use solderless breadboard power strips for motor distribution.
 ### Pulse calibration and staged verification
 
 `hardware::kServos` in `include/flex/hardware.hpp` holds five `{pin,minUs,maxUs}`
-entries. Defaults are D2–D6 with 1000–2000 µs pulse endpoints. Commands 10 and 170
+defaults. A valid saved EEPROM profile overrides the pulse endpoints while pins
+remain firmware-owned. Defaults are D2–D6 with 1000–2000 µs endpoints. Use the
+[receiver serial calibration guide](../SERVO_CALIBRATION.md) to tune each channel
+with `cal`, `set`, a one-servo `test`, and explicit `save` without rebuilding. Commands 10 and 170
 map to those endpoints, and 90 maps to the midpoint. Endpoints are clamped and
 validated against the library's 544–2400 µs absolute software range, but that
 range is not a physical safety rating. Narrow and tune each channel unloaded
@@ -277,7 +280,9 @@ indicates current can reach 2 A. The supply budget above follows that reference,
 but actual stall current and travel need validation on the actual servo.
 The receiver now narrows command pulses to per-servo 1000–2000 µs endpoints by
 default. Even these endpoints can exceed a particular unit's mechanical travel;
-adjust the corresponding `hardware::kServos` entry before coupling a mechanism.
+adjust and save the corresponding channel through receiver serial calibration
+before coupling a mechanism. Changing `kServos` defaults does not override a
+valid saved EEPROM profile.
 The single-channel supply budget does not apply to five servos; use the full
 supply/distribution section above.
 
