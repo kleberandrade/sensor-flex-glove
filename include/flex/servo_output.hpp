@@ -6,6 +6,10 @@ struct ServoSettings {
   uint8_t pin;
   uint16_t minUs;
   uint16_t maxUs;
+  bool reversed;
+  constexpr ServoSettings(uint8_t outputPin=0,uint16_t minimum=1000,
+                          uint16_t maximum=2000,bool reverse=false)
+      :pin(outputPin),minUs(minimum),maxUs(maximum),reversed(reverse) {}
 };
 constexpr bool validServoSettings(ServoSettings settings) {
   return settings.minUs >= 544 && settings.maxUs <= 2400 &&
@@ -15,7 +19,8 @@ constexpr bool validServoSettings(ServoSettings settings) {
 inline uint16_t pulseFor(uint8_t angle, ServoSettings settings) {
   if (angle < 10) angle = 10;
   if (angle > 170) angle = 170;
-  return settings.minUs + static_cast<uint32_t>(angle - 10) *
+  const uint8_t offset=settings.reversed?170-angle:angle-10;
+  return settings.minUs + static_cast<uint32_t>(offset) *
          (settings.maxUs - settings.minUs) / 160;
 }
 

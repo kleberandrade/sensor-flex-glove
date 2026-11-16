@@ -3,7 +3,7 @@
 #include "servo_output.hpp"
 #include <string.h>
 namespace flex {
-enum class CommandKind {None,Invalid,Help,Show,Calibrate,Set,Test,Stop,Save,Load,Defaults,Run};
+enum class CommandKind {None,Invalid,Help,Show,Calibrate,Set,Test,Invert,Stop,Save,Load,Defaults,Run};
 struct SerialCommand {
   CommandKind kind=CommandKind::None;
   uint8_t channel=0;
@@ -37,20 +37,33 @@ inline CommandKind simpleCommand(const char* name) {
   for(uint8_t i=0;i<8;++i) if(!strcmp(name,names[i])) return kinds[i];
   return CommandKind::Invalid;
 }
+inline CommandKind numericKind(const char* name,uint8_t count) {
+  if(count==4 && !strcmp(name,"set")) return CommandKind::Set;
+  if(count!=3) return CommandKind::Invalid;
+  if(!strcmp(name,"test")) return CommandKind::Test;
+  if(!strcmp(name,"invert")) return CommandKind::Invert;
+  return CommandKind::Invalid;
+}
+inline bool validNumericArguments(char** tokens,SerialCommand& command) {
+  switch(command.kind) {
+    case CommandKind::Set:
+      return parseUnsigned(tokens[3],command.second) &&
+             validServoSettings({0,command.first,command.second});
+    case CommandKind::Test:return command.first>=544 && command.first<=2400;
+    case CommandKind::Invert:return command.first<=1;
+    default:return false;
+  }
+}
 inline SerialCommand numericCommand(char** tokens,uint8_t count) {
-  SerialCommand result;result.kind=CommandKind::Invalid;
-  const bool set=count==4 && !strcmp(tokens[0],"set");
-  const bool test=count==3 && !strcmp(tokens[0],"test");
-  if(!set && !test) return result;
+  SerialCommand result;result.kind=numericKind(tokens[0],count);
+  if(result.kind==CommandKind::Invalid) return result;
   uint16_t channel;
   if(!parseUnsigned(tokens[1],channel) || channel>=kFingers ||
-     !parseUnsigned(tokens[2],result.first)) return result;
+     !parseUnsigned(tokens[2],result.first)) {
+    result.kind=CommandKind::Invalid;return result;
+  }
   result.channel=static_cast<uint8_t>(channel);
-  if(set) {
-    if(!parseUnsigned(tokens[3],result.second) ||
-       !validServoSettings({0,result.first,result.second})) return result;
-    result.kind=CommandKind::Set;
-  } else if(result.first>=544 && result.first<=2400) result.kind=CommandKind::Test;
+  if(!validNumericArguments(tokens,result)) result.kind=CommandKind::Invalid;
   return result;
 }
 inline SerialCommand parseCommand(char* line) {

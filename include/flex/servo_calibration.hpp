@@ -15,9 +15,13 @@ class ServoCalibration {
   const ServoSettings* settings() const {return settings_;}
   bool set(uint8_t channel,uint16_t minUs,uint16_t maxUs) {
     if(!active_ || channel>=kFingers) return false;
-    ServoSettings value={settings_[channel].pin,minUs,maxUs};
+    ServoSettings value={settings_[channel].pin,minUs,maxUs,settings_[channel].reversed};
     if(!validServoSettings(value)) return false;
     settings_[channel]=value;stop();return true;
+  }
+  bool setReversed(uint8_t channel,bool reversed) {
+    if(!active_ || channel>=kFingers) return false;
+    settings_[channel].reversed=reversed;stop();return true;
   }
   bool preview(uint8_t channel,uint16_t pulse,uint32_t now) {
     if(!active_ || channel>=kFingers) return false;
@@ -38,6 +42,7 @@ class ServoCalibration {
       if(!validServoSettings(values[i])) return false;
     for(uint8_t i=0;i<kFingers;++i) {
       settings_[i].minUs=values[i].minUs;settings_[i].maxUs=values[i].maxUs;
+      settings_[i].reversed=values[i].reversed;
     }
     stop();return true;
   }
