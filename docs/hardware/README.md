@@ -61,6 +61,73 @@ connecting USB. The two wireless nodes do not require a ground wire between
 them; each node needs its own local common ground. Avoid routing servo return
 current through the radio or breadboard signal-ground wiring.
 
+## Breadboard assembly
+
+![Numbered breadboard and pin-by-pin radio/servo wiring](../images/breadboard-wiring.svg)
+
+[Open the full-size SVG](../images/breadboard-wiring.svg) to zoom into the wires
+and hole labels. The top panel is a reproducible **one-sensor reader/transmitter
+divider**. The lower panels add the radios and receiver servo. This is an original
+reference drawing; no physical breadboard test is claimed.
+
+### Hole-by-hole divider connections
+
+Use a conventional breadboard with separate a–e and f–j strips per numbered row.
+Only the a–e side is used. The positions below are examples on the drawing: match
+the actual board's markings and verify continuity with power disconnected.
+
+| Part / jumper | First endpoint | Second endpoint | Purpose |
+| --- | --- | --- | --- |
+| Red supply jumper | Uno 5V | Positive rail, beside row 1 | Supply for the passive divider only |
+| Black return jumper | Uno GND | Negative rail, beside row 2 | Common local ground |
+| Red row jumper | Positive rail, beside row 5 | a5 | Connect the row-5 strip to 5 V |
+| Flex sensor, using flying leads | e5 | e10 | Variable resistance between supply and signal |
+| 10 kΩ fixed resistor | c10 | c15 | Bottom leg of the divider; two different strips |
+| Green signal jumper | Uno A0 | a10 | Read the row-10 signal junction |
+| Black row jumper | a15 | Negative rail, beside row 15 | Return the fixed resistor to ground |
+
+**Why this works:** a10, c10 and e10 share the same metal strip, forming the A0
+junction. Row 5 is the sensor's supply, row 10 its output, and row 15 the fixed
+resistor's ground return. Do not put both resistor leads into one strip: that
+would short the resistor. Holes f10–j10 are separate from a10–e10 across the gap.
+The highlighted strips illustrate existing internal connections, not extra wires.
+
+The diagram shows continuous rails only for its illustrated section. Some boards
+split rails midway or leave opposite-side rails isolated. Check that the supply
+and row jumpers use a continuous section; bridge only confirmed breaks with
+same-net jumpers. Do not assume rail color means the board is already powered.
+See the breadboard manufacturer's [strip and rail explanation](https://learn.sparkfun.com/tutorials/how-to-use-a-breadboard/).
+
+### Add radios by pin name
+
+The lower-left panel applies independently to the transmitter and receiver.
+Match the radio's printed **VCC, GND, CE, CSN, MOSI, MISO and SCK** labels to the
+Uno pins shown in the panel and the pinout table above. The terminal arrangement
+is a named breakout, **not a physical 2×4 pin-order diagram**; header orientation
+varies and the original module is unidentified. Use suitable female jumpers or
+a labeled breakout. Inserting a bare 2×4 header into ordinary connected five-hole
+strips can join pins that must remain separate.
+
+Radio VCC connects directly to **Uno 3.3V**, never to this breadboard's 5 V rail.
+C1 is 100 nF ceramic and C2 is 10 µF, both across radio VCC/GND and placed next to
+the module with short leads. If C2 is polarized, its positive lead goes to VCC
+and its negative lead to GND. Verify its polarity markings rather than relying
+on lead length. Leave IRQ disconnected. The electrical limits below still apply.
+
+### Add the receiver servo and check before powering
+
+The lower-right panel identifies D2, servo signal/V+/GND and the external supply
+terminals. Route servo power and return directly to its rated external supply,
+with a separate common-ground connection to the receiver. **Do not route servo
+motor current through the breadboard or Uno supply rail.** Do not connect the
+external supply positive to Uno 5V/VIN. The transmitter and receiver are wireless
+nodes and do not need a ground wire between them.
+
+Before powering, check row connections and rail continuity, confirm that 5 V and
+GND are not shorted, and verify the actual radio pin labels and capacitor polarity.
+Test the single-sensor reader first, then the radios without the servo load,
+then an unloaded servo as described in the [build guide](../BUILD_GUIDE.md).
+
 ## Electrical rationale and constraints
 
 The [Spectra Symbol stock sensor datasheet](https://cdn.sparkfun.com/datasheets/Sensors/ForceFlex/FLEX%20SENSOR%20DATA%20SHEET%202014.pdf)

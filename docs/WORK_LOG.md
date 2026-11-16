@@ -45,3 +45,10 @@
 - Retained the detailed circuit and its electrical constraints as the wiring source of truth. No firmware behavior or hardware specification changed.
 - Aligned the local checkout directory with the new repository name and recreated only the task-created Python virtual environment, preventing stale executable paths after the directory move. Verified documentation links/anchors, renamed URLs and SVG XML; rendered and inspected the electronics illustration.
 - After relocating the checkout, `make test example`, `pip check` and all three real Uno builds passed with the pinned environment. No tracked source/documentation retains the previous repository name.
+
+## Breadboard reproduction diagram (2026-11-16)
+
+- Added an original SVG with numbered rows/columns and exact occupied holes for the single-sensor divider. Distinct wires connect Uno 5V/GND/A0, the flex strip e5–e10, the fixed resistor c10–c15 and the rail jumpers.
+- Included named-pin wireless additions for each Uno, parallel local radio capacitors with polarity, and receiver servo wiring with an external supply/common-ground return. Kept servo current out of the breadboard. No unidentified 2×4 module header orientation is assumed.
+- Embedded the image in the README, hardware reference and staged build guide. Added the hole-by-hole table, strip/gap explanation, rail-continuity checks and the primary breadboard-vendor reference. Existing electrical limits and firmware pin assignments remain unchanged.
+- Validated Markdown links/anchors and SVG XML, compared all 19 labeled wiring endpoints with the documented circuit, and checked CE=D7, CSN=D8 and servo=D2 against the firmware configuration. Rendered and visually inspected the final image, including hole positions, resistor bands, capacitor/supply polarity and label legibility. This is documentation-only; physical continuity/electrical checks remain a builder responsibility.

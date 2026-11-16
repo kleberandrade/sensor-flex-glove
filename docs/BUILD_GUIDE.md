@@ -49,6 +49,13 @@ not the electrical characteristics or accuracy of a physical sensor.
 
 ## 3. Wire and check a single divider
 
+![Breadboard with named pins, colored wires and example hole positions](images/breadboard-wiring.svg)
+
+Use the [hole-by-hole breadboard table](hardware/README.md#breadboard-assembly):
+flex e5–e10, fixed resistor c10–c15, Uno A0 to a10, and the supply/ground jumpers
+shown in the top panel. Verify your board's strip and rail continuity before
+following the example row numbers. Lower panels are optional wireless additions.
+
 Keep power disconnected while assembling. Follow the
 [pinout and circuit](hardware/README.md#circuit-and-pinout):
 

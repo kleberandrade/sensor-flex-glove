@@ -43,6 +43,17 @@ own power supply. It is an original reference illustration, not a photograph of
 an assembled prototype. Follow the [detailed circuit and electrical pinout](docs/hardware/README.md#circuit-and-pinout)
 for actual connections, voltage constraints and component selection.
 
+## Breadboard assembly
+
+![Breadboard assembly with numbered holes, labeled Uno pins and color-coded wires](docs/images/breadboard-wiring.svg)
+
+Start with the top panel for the radio-free reader: the sensor spans **e5–e10**,
+the 10 kΩ resistor spans **c10–c15**, and **a10 connects to A0**. The lower panels
+show optional radio wiring on each Uno and the separately powered receiver servo.
+Open the image at full size and follow the [hole-by-hole connection table](docs/hardware/README.md#breadboard-assembly)
+for the rails, occupied holes, capacitor polarity and pre-power checks. Uno and
+radio terminals are named breakouts, not a claim about physical header order.
+
 ## Applications
 
 - Teach resistive sensing, ADC acquisition, calibration and the noise/latency trade-off.
