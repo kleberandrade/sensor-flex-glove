@@ -19,3 +19,10 @@
 - Environment notes: clone/downloads required approved network access; the initial system Python 3.9.6 emitted urllib3's LibreSSL warning, so the task-created virtual environment was replaced with the installed Python 3.13 for final validation. The Arduino core emits upstream unused-parameter warnings with `-Wextra`. CI uses Python 3.12; that hosted environment has not been executed here.
 - Remaining validation requires actual hardware: sensor identification, rail measurements, ADC travel, radio/ACK reliability, servo pulse/travel limits and timeout behavior. The provided wiring is a reference design because the original module is unidentified.
 - Final toolchain check used Python 3.13 with a fresh virtual environment. Locked the complete resolved Python tool dependency set in `requirements-dev.txt`; checked each package's declared Python requirement against CI Python 3.12 and ran `pip check`. Kept the local virtual environment and compiler cache ignored for continued project use.
+
+## Branch migration and publication (2026-11-16)
+
+- The user explicitly authorized publishing the four modernization commits and changing the default branch from `master` to `main`.
+- Verified that the remote has only the unprotected `master` at `7e0747e`, that no `main` exists, and that the authenticated account can administer this repository.
+- Updated the workflow push trigger and README badge to `main`; historical entries above retain the branch names and validation state at the time of their execution.
+- Publication uses GitHub's branch rename operation followed by a normal fast-forward push, preserving history without a force push. The active chat follows the hosted CI to completion and handles any failures.

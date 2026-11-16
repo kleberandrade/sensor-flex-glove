@@ -1,6 +1,6 @@
 # Flex Sensor Glove
 
-[![CI](https://github.com/kleberandrade/sensor-flex-groove/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/kleberandrade/sensor-flex-groove/actions/workflows/ci.yml)
+[![CI](https://github.com/kleberandrade/sensor-flex-groove/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/kleberandrade/sensor-flex-groove/actions/workflows/ci.yml)
 ![C++11](https://img.shields.io/badge/C%2B%2B-11-blue)
 ![Arduino Uno R3](https://img.shields.io/badge/Arduino-Uno_R3-00979D)
 ![PlatformIO](https://img.shields.io/badge/PlatformIO-6.2.0-orange)
