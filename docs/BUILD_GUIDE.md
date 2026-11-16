@@ -268,14 +268,14 @@ fixed by the configuration, not by how the glove is worn.
 3. With horns/linkages unloaded, connect one servo signal at a time to D2–D6.
    Enter `cal` on the receiver serial monitor and follow the
    [individual calibration guide](SERVO_CALIBRATION.md): `set CH MIN_US MAX_US`,
-   `test CH US`, optional `invert CH 0|1`, then explicit `save`. Start with a narrow verified range and
+   `test CH US`, optional `invert CH 0|1` and `speed CH US_PER_S`, then explicit `save`. Start with a narrow verified range and
    test one servo at a time before fitting a mechanism. Defaults are 1000–2000 µs;
    normally command 10 maps to min, 170 to max, and 90 to the midpoint.
    `invert CH 1` swaps command direction for that servo; raw pulse tests stay literal. These are commands,
    not physical joint-angle measurements.
 4. Use `show` to verify all five settings and `run` to resume fresh RF commands.
-   No rebuild is needed for serial endpoint changes; EEPROM reloads them after
-   reset. The receiver is already five-channel capable and does not use
+   No rebuild is needed for serial endpoint/direction/speed changes; EEPROM
+   reloads them after reset. The receiver is already five-channel capable and does not use
    `kActiveFingers` to limit its outputs. That constant controls transmitter
    sensor acquisition only.
 5. Calibrate all five sensors. Verify each finger's channel, servo mapping and
@@ -296,13 +296,21 @@ and supply check in this section needs actual bench validation.
 Connect to the receiver at 115200 baud; keep transmitter motion disabled until
 `cal` is acknowledged. `cal` and `stop` detach all outputs and pause RF actuation.
 A `invert CH 1` reverses one channel (`0` restores normal) without changing its
-limits; `show` reports its direction. A `test` command drives just the selected servo for up to a 1000 ms loop-checked
+limits; `speed CH US_PER_S` enables a per-servo pulse ramp (`0` disables it).
+`show` reports direction and speed. Raw previews bypass the ramp. A `test` command drives just the selected servo for up to a 1000 ms loop-checked
 interval; `save` detaches before writing EEPROM. `run` clears stale radio data
 and resumes only on fresh packets. Test every channel and verify saved values
 with `show` after a reset. Follow [SERVO_CALIBRATION.md](SERVO_CALIBRATION.md) for
 all commands, input limits, EEPROM recovery and a gradual unloaded workflow.
 Transmitter `c` still calibrates sensor ADC bounds in RAM; it does not set or save
 receiver pulse endpoints.
+
+For smoothing, begin with a modest verified pulse rate such as `speed 0 500`
+in `cal` mode, then `save` and `run`. Units are commanded µs/s, not physical
+angular speed. Keep valid RF commands arriving during a slow movement. First
+attachment with a positive rate starts at the configured midpoint, which can
+still jump an unknown mechanism; test unloaded. See the
+[speed/startup/recovery details](SERVO_CALIBRATION.md#smooth-motion-with-an-individual-speed-setting).
 
 ## 10. Troubleshoot by stage
 
@@ -321,6 +329,7 @@ receiver pulse endpoints.
 | Serial edits are rejected | Wrong board/baud/line ending or RF mode active | Use the receiver at 115200, newline, then `cal` |
 | Limits revert after reset | RAM-only edit, save failure or invalid EEPROM | Check `show`, wait for `save` success, inspect load/fallback status |
 | Servo ignores the glove | Calibration mode still active | Finish/stop manual tests, then send `run` |
+| Motion stops before reaching a slow target | RF timeout or invalid channel | Keep valid RF data flowing; the 500 ms timeout overrides the ramp |
 | Manual servo test stops | The 1000 ms preview interval elapsed | Expected behavior; repeat a deliberate test or send `run` |
 
 ## Next steps

@@ -114,5 +114,27 @@ int main() {
   setup();enqueue({12,16,{10,10,10,10,10}});loop();assert(servos[4].pulse==1900);
   command("cal\n");command("invert 4 0\n");command("save\n");
   setup();enqueue({13,16,{10,10,10,10,10}});loop();assert(servos[4].pulse==1100);
-  std::puts("Receiver firmware + serial limits/inversion/EEPROM checks passed (host doubles)");
+  command("cal\n");command("test 4 1500\n");
+  command("speed 4 200\n");assert(!servos[4].attached());
+  command("set 4 1100 1900\n");command("invert 4 1\n");command("invert 4 0\n");
+  command("save\n");command("show\n");
+  assert(Serial.output.find("4,6,1100,1900,0,200")!=std::string::npos);
+  command("run\n");enqueue({14,31,{170,170,170,170,170}});loop();
+  assert(servos[0].pulse==2000 && servos[4].pulse==1500);
+  fakeNow+=100;enqueue({15,31,{170,170,170,170,170}});loop();assert(servos[4].pulse==1520);
+  fakeNow+=100;enqueue({16,16,{10,10,10,10,10}});loop();assert(servos[4].pulse==1500);
+  fakeNow+=500;loop();assert(!servos[4].attached()); // no wait for a ramp to finish
+  enqueue({17,16,{10,10,10,10,10}});loop();assert(servos[4].pulse==1500);
+  fakeNow+=100;enqueue({18,16,{10,10,10,10,10}});loop();assert(servos[4].pulse==1480);
+  command("speed 4 10000\n"); // rejected in RF mode
+  assert(calibration.settings()[4].speedUsPerSecond==200);
+  command("cal\n");command("test 4 1800\n");assert(servos[4].pulse==1800);
+  command("run\n");enqueue({19,16,{10,10,10,10,10}});loop();assert(servos[4].pulse==1800);
+  setup();enqueue({20,16,{10,10,10,10,10}});loop();assert(servos[4].pulse==1500);
+  fakeNow+=100;enqueue({21,16,{10,10,10,10,10}});loop();assert(servos[4].pulse==1480);
+  command("cal\n");command("speed 4 0\n");command("run\n");
+  enqueue({22,16,{10,10,10,10,170}});loop();assert(servos[4].pulse==1900);
+  command("cal\n");command("defaults\n");command("load\n");command("show\n");
+  assert(calibration.settings()[4].speedUsPerSecond==200);
+  std::puts("Receiver firmware + serial limits/inversion/speed/EEPROM checks passed (host doubles)");
 }

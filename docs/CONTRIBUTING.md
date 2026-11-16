@@ -14,6 +14,7 @@ include/flex/
   core.hpp               Portable C++11 processing and protocol; no Arduino API
   receiver.hpp           Five-channel command validity and timeout state
   servo_output.hpp       Pulse limits and Servo-like output adapter
+  servo_motion.hpp       Nonblocking per-channel pulse slew state
   servo_calibration.hpp  Runtime endpoint profile and one-servo test session
   serial_command.hpp     Bounded serial line reader and validated commands
   calibration_storage.hpp  Versioned two-slot EEPROM journal and CRC
@@ -23,7 +24,8 @@ examples/readings.cpp    Executable synthetic reading example using the core
 tests/core_test.cpp      Host behavior tests of the portable core
 tests/receiver_test.cpp  Five-channel state and pulse/output lifecycle tests
 tests/calibration_test.cpp  Parser/session/journal interruption and recovery tests
-tests/inversion_test.cpp  Direction mapping, persistence and v1/v2 migration tests
+tests/inversion_test.cpp  Direction mapping, persistence and legacy fixtures
+tests/speed_test.cpp     Slew timing/state and v1/v2→v3 journal migration tests
 tests/receiver_firmware_test.cpp  Actual receiver entry points with host doubles
 tests/support/          Explicit host Arduino/RF24/Servo/EEPROM substitutes
 docs/

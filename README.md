@@ -106,8 +106,8 @@ starting budget, not measured demand or a universal requirement; verify the
 actual servos, startup/stall load, wiring, connectors and protection. See the
 [source-backed power guide](docs/hardware/README.md#five-servo-receiver-and-power).
 
-Each `{pin, minUs, maxUs, reversed}` entry in `hardware::kServos` supplies firmware
-defaults; the optional fourth field defaults to `false`.
+Each `{pin, minUs, maxUs, reversed, speedUsPerSecond}` entry in `hardware::kServos` supplies firmware
+defaults; the optional direction and speed fields default to `false` and `0`.
 A valid saved receiver EEPROM profile overrides its pulse limits at boot.
 Commands 10–170 span **1000–2000 µs by default**, with independent limits for
 mechanical calibration. Check every servo unloaded before fitting a horn/linkage.
@@ -133,10 +133,9 @@ run
 ```
 
 `set CH MIN_US MAX_US` edits one channel (0–4); `invert CH 1` reverses it and
-`invert CH 0` restores normal direction. `show` includes a final `reversed` field
-(0/1). Direction and limits are saved together. `test CH US` previews only that
+`invert CH 0` restores normal direction. `show` includes `reversed` (0/1) and `speed_us_per_s` fields. Direction, limits and speed are saved together. `test CH US` previews only that
 servo for a 1000 ms software interval, within its configured limits; its raw
-microseconds are not inverted. In RF mode, inversion swaps the min/max command
+microseconds are not inverted or speed-limited. In RF mode, inversion swaps the min/max command
 direction without changing pins, limits, incoming angles or other channels. `save`
 explicitly stores the five-channel profile; reset reloads it from EEPROM.
 `load` discards RAM edits, `defaults` restores RAM defaults, and `help` lists
@@ -146,11 +145,37 @@ fresh radio commands without saving. Valid limits satisfy
 
 The EEPROM format uses two versioned CRC-checked records with fallback to the
 last complete valid profile, or firmware defaults. Existing v1 profiles retain
-their limits and load in normal direction. An explicit save upgrades to schema
-v2 without moving its two slots; identical v2 saves do not write.
+their limits and load in normal direction; v2 also retains inversions. Both load
+with speed 0. Explicit save upgrades to a separate v3 bank without overwriting
+the legacy slots; identical v3 saves do not write.
 See the [complete serial calibration and EEPROM guide](docs/SERVO_CALIBRATION.md)
 for gradual endpoint tuning, recovery, reserved addresses and limitations.
 This is separate from transmitter ADC calibration with `c`, which stays in RAM.
+
+### Smooth each servo's commands
+
+On the receiver at 115200 baud:
+
+```text
+cal
+speed 2 500
+show
+save
+run
+```
+
+This limits channel 2 / D4 to **500 µs of commanded pulse change per second**;
+`speed 2 0` disables the ramp. Rates are 0–10000 µs/s and are saved independently
+with the limits/direction. Inversion is applied before the ramp. Timeout/invalid
+channels still detach without waiting for movement to finish; the ramp needs
+continued valid RF data. Raw `test` previews intentionally bypass it.
+
+A limited channel's first command after boot starts at its configured midpoint;
+after detachment it uses its remembered emitted pulse. Neither is a measurement
+of physical position or a guarantee of a gentle first movement. Check the
+[full speed/ramp and startup guide](docs/SERVO_CALIBRATION.md#smooth-motion-with-an-individual-speed-setting)
+before loading a mechanism. The new EEPROM reservation is **0–145**, with v3
+slots at 64 and 105 and the old bank kept intact for recovery.
 
 ## Applications
 
@@ -284,7 +309,8 @@ RF/Arduino/Servo doubles; these do not simulate AVR timer or physical behavior.
 Serial/EEPROM tests additionally cover bounded command parsing, per-servo editing,
 manual test expiry, radio suppression, profile reload and interrupted/corrupt
 saves. Inversion tests also cover per-channel direction, endpoint preservation,
-legacy migration and interrupted direction saves. CI runs all five host test executables, sanitizers and all three firmware builds. The CI badge reports GitHub's
+legacy migration and interrupted direction saves. Speed tests cover fractional progress, target reversal, per-channel persistence,
+timeout priority and v1/v2→v3 interrupted migration. CI runs all six host test executables, sanitizers and all three firmware builds. The CI badge reports GitHub's
 actual workflow status; no hardware or coverage badge is claimed.
 
 See [validation and work log](docs/WORK_LOG.md) for commands and limitations.
@@ -329,8 +355,8 @@ fixed payload. These replace the old native-`int` struct, address and channel
 radio rules for your deployment; channel choice alone does not establish
 regulatory compliance. The original 2017 firmware and protocol v1 are incompatible.
 
-The current receiver writes EEPROM schema v2 independently of the RF format;
-it also reads schema v1 with all directions normal. An empty/invalid receiver EEPROM uses firmware defaults without writing;
+The current receiver writes EEPROM schema v3 independently of the RF format;
+it reads v1/v2 profiles with speed 0 (and preserves v2 directions). An empty/invalid receiver EEPROM uses firmware defaults without writing;
 a saved profile takes precedence over source-code defaults. See the calibration
 guide before migrating existing actuator travel settings.
 
