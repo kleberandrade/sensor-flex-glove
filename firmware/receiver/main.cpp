@@ -17,7 +17,7 @@ void setup() {
   radio.openReadingPipe(1, hardware::kAddress);
   radio.startListening();
   Serial.println(F("# Waiting for valid commands; all five servos detached"));
-  Serial.println(F("# angle0,angle1,angle2,angle3,angle4 (ignored when channel invalid)"));
+  Serial.println(F("# valid_mask,angle0,angle1,angle2,angle3,angle4"));
 }
 
 void loop() {
@@ -26,12 +26,21 @@ void loop() {
     uint8_t bytes[flex::kPacketSize];
     radio.read(bytes, sizeof(bytes));
     if (!receiver.receive(bytes, sizeof(bytes), millis())) continue;
+    Serial.print(receiver.enabledMask());
+    Serial.print(',');
     for (uint8_t i = 0; i < flex::kFingers; ++i) {
       Serial.print(receiver.command(i).angle);
       Serial.print(i + 1 == flex::kFingers ? '\n' : ',');
     }
   }
   receiver.tick(millis());
-  for (uint8_t i = 0; i < flex::kFingers; ++i)
+  for (uint8_t i = 0; i < flex::kFingers; ++i) {
+    const bool wasAttached = servos[i].attached();
     flex::applyServo(servos[i], receiver.command(i), hardware::kServos[i]);
+    if (wasAttached != servos[i].attached()) {
+      Serial.print(servos[i].attached() ? F("# attached channel ") :
+                                        F("# detached channel "));
+      Serial.println(i);
+    }
+  }
 }

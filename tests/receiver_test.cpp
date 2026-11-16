@@ -12,9 +12,11 @@ bool deliver(flex::Receiver& receiver, const flex::Packet& packet, uint32_t now)
 
 void independent_commands_and_masks() {
   flex::Receiver receiver;
+  assert(receiver.enabledMask() == 0);
   for (uint8_t i = 0; i < 5; ++i) assert(!receiver.command(i).enabled);
   flex::Packet packet = {1, 31, {10, 50, 90, 130, 170}};
   assert(deliver(receiver, packet, 100));
+  assert(receiver.enabledMask() == 31);
   for (uint8_t i = 0; i < 5; ++i) {
     assert(receiver.command(i).enabled);
     assert(receiver.command(i).angle == packet.angles[i]);
@@ -22,6 +24,7 @@ void independent_commands_and_masks() {
   packet.mask = 0x15;
   packet.angles[2] = 110;
   assert(deliver(receiver, packet, 200));
+  assert(receiver.enabledMask() == 0x15);
   for (uint8_t i = 0; i < 5; ++i)
     assert(receiver.command(i).enabled == ((packet.mask >> i) & 1));
   assert(receiver.command(2).angle == 110);
@@ -59,6 +62,7 @@ void timeout_wrap_and_recovery() {
   receiver.tick(483); // 499 ms after the last accepted frame
   for (uint8_t i = 0; i < 5; ++i) assert(receiver.command(i).enabled);
   receiver.tick(484);
+  assert(receiver.enabledMask() == 0);
   for (uint8_t i = 0; i < 5; ++i) assert(!receiver.command(i).enabled);
   packet.sequence = 0;
   packet.mask = 16;

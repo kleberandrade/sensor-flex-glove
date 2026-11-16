@@ -24,6 +24,12 @@ class Receiver {
         commands_[i].enabled = false;
     }
   }
+  uint8_t enabledMask() const {
+    uint8_t mask = 0;
+    for (uint8_t i = 0; i < kFingers; ++i)
+      if (commands_[i].enabled) mask |= static_cast<uint8_t>(1U << i);
+    return mask;
+  }
   // index is a trusted channel index in [0, kFingers).
   const ServoCommand& command(uint8_t index) const { return commands_[index]; }
  private:
