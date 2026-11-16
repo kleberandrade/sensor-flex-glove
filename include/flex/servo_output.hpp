@@ -20,16 +20,22 @@ inline uint16_t pulseFor(uint8_t angle, ServoSettings settings) {
 }
 
 template <typename ServoType>
-void applyServo(ServoType& servo, ServoCommand command, ServoSettings settings) {
-  if (!command.enabled) {
+void applyPulse(ServoType& servo, bool enabled, uint16_t pulse, ServoSettings settings) {
+  if (!enabled) {
     if (servo.attached()) servo.detach();
     return;
   }
   // Prime before enabling pulses, including reattachment after a timeout.
-  servo.writeMicroseconds(pulseFor(command.angle, settings));
+  if (pulse < settings.minUs) pulse = settings.minUs;
+  if (pulse > settings.maxUs) pulse = settings.maxUs;
+  servo.writeMicroseconds(pulse);
   // Default library bounds avoid its AVR int8_t custom-attach offset limits.
   // Our own per-servo pulse limits are applied explicitly above.
   if (!servo.attached()) servo.attach(settings.pin);
+}
+template <typename ServoType>
+void applyServo(ServoType& servo, ServoCommand command, ServoSettings settings) {
+  applyPulse(servo, command.enabled, pulseFor(command.angle, settings), settings);
 }
 }
 #endif

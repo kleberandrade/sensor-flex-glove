@@ -100,6 +100,13 @@ void pulse_limits_and_output_lifecycle() {
   assert(flex::pulseFor(0, settings) == 1000);
   assert(flex::pulseFor(255, settings) == 2000);
   assert(flex::pulseFor(90, {2, 1100, 1900}) == 1500);
+  FakeServo direct;
+  flex::applyPulse(direct, true, 2500, settings);
+  assert(direct.pulseAtAttach == 2000);
+  flex::applyPulse(direct, true, 500, settings);
+  assert(direct.pulse == 1000);
+  flex::applyPulse(direct, false, 1500, settings);
+  assert(!direct.active);
   FakeServo servo;
   flex::applyServo(servo, {false, 10}, settings);
   assert(!servo.active && servo.detachCount == 0);

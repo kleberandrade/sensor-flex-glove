@@ -19,6 +19,7 @@ struct RF24 {
   void setPayloadSize(uint8_t) {}
   void openReadingPipe(uint8_t,const uint8_t*) {}
   void startListening() {}
+  void flush_rx() {frames.clear();}
   bool available() { return !frames.empty(); }
   void read(void* data, uint8_t size) {
     assert(!frames.empty() && size==frames.front().size());

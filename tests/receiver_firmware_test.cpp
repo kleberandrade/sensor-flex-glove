@@ -1,9 +1,15 @@
 #include <cassert>
 #include <cstdio>
 #include "../firmware/receiver/main.cpp"
+EEPROMClass EEPROM;
 uint32_t fakeNow = 0;
 FakeSerial Serial;
 
+void command(const char* line) {
+  Serial.feed(line);
+  for(int count=0;count<20 && Serial.available();++count) loop();
+  assert(!Serial.available());
+}
 void enqueue(flex::Packet packet) {
   std::array<uint8_t, flex::kPacketSize> bytes = {};
   flex::encode(packet, bytes.data());
@@ -11,6 +17,7 @@ void enqueue(flex::Packet packet) {
 }
 int main() {
   setup();
+  assert(EEPROM.writes==0);
   for (uint8_t i = 0; i < 5; ++i) assert(!servos[i].attached());
   enqueue({1, 31, {10, 50, 90, 130, 170}});
   fakeNow = 100;
@@ -43,5 +50,52 @@ int main() {
   loop();
   assert(radio.frames.size() == 1);
   assert(servos[0].attached() && servos[0].pulse == 1250);
-  std::puts("Receiver firmware adapter checks passed (mock RF/Servo, not hardware)");
+  command("set 0 1100 1900\n"); // RF mode must reject editing
+  assert(Serial.output.find("ERR enter cal")!=std::string::npos);
+  command("cal\n");
+  for(uint8_t i=0;i<5;++i) assert(!servos[i].attached());
+  command("set 4 1100 1900\n");
+  command("test 4 1900\n");
+  assert(servos[4].attached() && servos[4].pulse==1900);
+  enqueue({6,31,{10,10,10,10,10}});loop();
+  assert(servos[4].pulse==1900 && !servos[0].attached()); // RF suppressed
+  fakeNow+=999;loop();assert(servos[4].attached());
+  command("test 4 1901\n"); // invalid preview must not extend its deadline
+  fakeNow+=1;loop();assert(!servos[4].attached());
+  command("test 4 1500\n");assert(servos[4].attached());
+  command("test 0 1500\n");
+  assert(servos[0].attached() && !servos[4].attached());
+  assert(servos[0].concurrentAtAttach==1);
+  command("save\n"); // no servo remains driven during EEPROM programming
+  for(uint8_t i=0;i<5;++i) assert(!servos[i].attached());
+  int writes=EEPROM.writes;
+  command("save\n");assert(EEPROM.writes==writes);
+  command("defaults\n");
+  command("test 4 2000\n");assert(servos[4].pulse==2000);
+  command("load\n");
+  command("test 4 2000\n");assert(!servos[4].attached()); // restored 1900 max
+  command("test 4 1100\n");assert(servos[4].pulse==1100);
+  command("stop\n");assert(!servos[4].attached());
+  enqueue({7,16,{10,10,10,10,170}});
+  command("run\n"); // queued data must not resume motion
+  assert(!servos[4].attached());
+  enqueue({8,16,{10,10,10,10,170}});loop();assert(servos[4].pulse==1900);
+  command("cal\n");command("set 4 1200 1800\n"); // unsaved edit
+  setup(); // simulated setup reload from EEPROM, not the changed RAM profile
+  enqueue({9,16,{10,10,10,10,170}});loop();assert(servos[4].pulse==1900);
+  command("show\n");assert(Serial.output.find("4,6,1100,1900")!=std::string::npos);
+  command("save\n");assert(Serial.output.find("ERR enter cal")!=std::string::npos);
+  command("cal\n");
+  EEPROM.readOnly=true;
+  command("set 4 1200 1800\n");command("save\n");
+  assert(Serial.output.find("ERR EEPROM save failed")!=std::string::npos);
+  EEPROM.readOnly=false;
+  EEPROM.bytes.fill(0xff); // both records lost: explicit load falls back to defaults
+  command("load\n");command("test 4 2000\n");
+  assert(servos[4].attached() && servos[4].pulse==2000);
+  command("help\n");assert(Serial.output.find("set CH MIN_US MAX_US")!=std::string::npos);
+  command("set 5 1100 1900\n");
+  assert(Serial.output.find("ERR invalid command")!=std::string::npos);
+  command("stop\n");
+  std::puts("Receiver firmware adapter + serial/EEPROM checks passed (host doubles)");
 }
